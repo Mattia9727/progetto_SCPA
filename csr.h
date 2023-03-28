@@ -1,4 +1,4 @@
-#include "matrix_retriever.h"
+#include "matrix_generator.h"
 #include <malloc.h>
 #include <stdlib.h>
 
