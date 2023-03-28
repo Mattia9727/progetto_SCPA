@@ -1,4 +1,4 @@
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 
 #define N 1000
@@ -69,4 +69,4 @@ int main()
 
     return 0;
 }
-
+*/
