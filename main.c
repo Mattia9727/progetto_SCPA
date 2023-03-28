@@ -2,7 +2,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 
-void main(){
+void maina(){
     sparse_matrix mat;
     mat.m = 3;
     mat.n = 6;
