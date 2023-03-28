@@ -5,3 +5,8 @@ typedef struct{
     float**      coeff; //Vettore dei coefficienti
 } sparse_matrix;
 
+typedef struct{
+    int m;              //Numero righe multivettore
+    int n;              //Numero colonne multivettore
+    float**     coeff;  //Vettore dei coefficienti
+} multivector;

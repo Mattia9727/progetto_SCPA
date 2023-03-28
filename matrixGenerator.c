@@ -8,7 +8,8 @@
 #define ROWS 10
 #define COLS 10
 
-int main() {
+
+int maina() {
     int **sparse_matrix;    // doppio puntatore per la matrice
     int max_nz = 5;         // numero massimo di elementi non nulli per riga
     int row_nz;             // numero di elementi non nulli nella riga corrente

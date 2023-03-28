@@ -4,12 +4,12 @@
 
 void main(){
     sparse_matrix mat;
-    mat.m = 4;
-    mat.n = 4;
+    mat.m = 3;
+    mat.n = 6;
     mat.nz = 7;
-    float exMat[][4] = {{11.0,12.0,0.0,0.0},{0.0,22.0,23.0,0.0},{0.0,0.0,33.0,0.0},{0.0,0.0,43.0,44.0}};
-    mat.coeff = (float**)malloc(sizeof(float*)*4);
-    for(int i = 0; i < 4; i++){
+    float exMat[][6] = {{2.0,0.0,0.0,5.0,1.0,0.0},{0.0,2.0,3.0,0.0,0.0,0.0},{0.0,0.0,2.0,1.0,0.0,0.0}};
+    mat.coeff = (float**)malloc(sizeof(float*)*3);
+    for(int i = 0; i < 3; i++){
         mat.coeff[i] = &(exMat[i][0]);
     }
 
