@@ -2,6 +2,9 @@
 #include <malloc.h>
 #include <stdlib.h>
 
+#ifndef _CRSH_
+#define _CSRH_ 
+
 typedef struct{
     int m;              //Numero righe matrice
     int n;              //Numero colonne matrice
@@ -46,3 +49,5 @@ csr_matrix convertToCsr(sparse_matrix matrix){
     return convertedMatrix;
     
 }
+
+#endif

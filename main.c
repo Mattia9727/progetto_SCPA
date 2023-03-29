@@ -1,15 +1,15 @@
-#include "csr.h"
 #include <malloc.h>
 #include <stdlib.h>
+#include "product.h"
 
-void maina(){
+void main(){
     sparse_matrix mat;
-    mat.m = 3;
-    mat.n = 6;
-    mat.nz = 7;
-    float exMat[][6] = {{2.0,0.0,0.0,5.0,1.0,0.0},{0.0,2.0,3.0,0.0,0.0,0.0},{0.0,0.0,2.0,1.0,0.0,0.0}};
-    mat.coeff = (float**)malloc(sizeof(float*)*3);
-    for(int i = 0; i < 3; i++){
+    mat.m = 2;
+    mat.n = 3;
+    mat.nz = 3;
+    float exMat[][3] = {{1.0,1.0,0.0},{0.0,0.0,1.0}};
+    mat.coeff = (float**)malloc(sizeof(float*)*mat.m);
+    for(int i = 0; i < mat.m; i++){
         mat.coeff[i] = &(exMat[i][0]);
     }
 
@@ -31,5 +31,23 @@ void maina(){
     }
     printf("\n");
 
+    multivector vector;
+    vector.m = 3;
+    vector.n = 2;
+    float exVec[][2] = {{1.0,1.0},{1.0,1.0},{1.0,1.0}};
+    vector.coeff = (float**)malloc(sizeof(float*)*vector.m);
+    for(int i = 0; i < vector.m; i++){
+        vector.coeff[i] = &(exVec[i][0]);
+    } 
+    printf("sto per calcolare\n");
+    float** result = calcola_prodotto_seriale(converted_matrix,vector);
+
+    // Stampa della matrice
+    for (int i = 0; i < mat.m; i++) {
+        for (int j = 0; j < vector.n; j++) {
+            printf("%f ", result[i][j]);
+        }
+        printf("\n");
+    }
 
 }

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define ROWS 10
+#define COLS 10
 #define MAX_RANDOM_VALUE 10
 
 typedef struct{

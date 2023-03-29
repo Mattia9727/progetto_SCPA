@@ -47,15 +47,15 @@ ellpack_matrix ConvertToELLPACK(sparse_matrix* matrix){
         }
         if (new_matrix.MAXNZ < maxnz) new_matrix.MAXNZ = maxnz;
     }
-    new_matrix.AS = malloc(sizeof(float) * new_matrix.MAXNZ * new_matrix.M);
-    new_matrix.JA = malloc(sizeof(int) * new_matrix.MAXNZ * new_matrix.M);
+    new_matrix.AS = (float**)malloc(sizeof(float) * new_matrix.MAXNZ * new_matrix.M);
+    new_matrix.JA = (int**)malloc(sizeof(int) * new_matrix.MAXNZ * new_matrix.M);
     for(int i=0; i < matrix->m; i++){
         int k=0;
-        new_matrix.AS[i] = (int *) calloc(new_matrix.MAXNZ, sizeof(float));
+        new_matrix.AS[i] = (float *) calloc(new_matrix.MAXNZ, sizeof(float));
         new_matrix.JA[i] = (int *) calloc(new_matrix.MAXNZ, sizeof(int));
         for(int j=0; j < new_matrix.N; j++){
             if (matrix->coeff[i][j] != 0) {
-                new_matrix.AS[i][k] = matrix->coeff[i][j];
+                new_matrix.NZ[i][k] = matrix->coeff[i][j];
                 new_matrix.JA[i][k] = j;
                 k++;
             }
