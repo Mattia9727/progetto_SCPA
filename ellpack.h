@@ -55,7 +55,7 @@ ellpack_matrix ConvertToELLPACK(sparse_matrix* matrix){
         new_matrix.JA[i] = (int *) calloc(new_matrix.MAXNZ, sizeof(int));
         for(int j=0; j < new_matrix.N; j++){
             if (matrix->coeff[i][j] != 0) {
-                new_matrix.NZ[i][k] = matrix->coeff[i][j];
+                new_matrix.AS[i][k] = matrix->coeff[i][j];
                 new_matrix.JA[i][k] = j;
                 k++;
             }
