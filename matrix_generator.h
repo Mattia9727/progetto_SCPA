@@ -21,7 +21,7 @@ typedef struct{
 
 
 
-sparse_matrix GenerateMatrix() {
+sparse_matrix generateMatrix() {
     sparse_matrix new_matrix;
     new_matrix.m = ROWS;
     new_matrix.n = COLS;
