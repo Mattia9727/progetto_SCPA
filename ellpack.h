@@ -16,7 +16,7 @@ typedef struct {
 
 void PrintELLPACKMatrix(ellpack_matrix matrix){
     printf("M = %d, N = %d, MAXNZ = %d \n\n",matrix.M, matrix.N, matrix.MAXNZ);
-    printf("NZ (Matrice di nonzeri): \n");
+    printf("AS (Matrice di nonzeri): \n");
     for(int i=0; i < matrix.M; i++) {
         printf("[");
         for (int j = 0; j < matrix.MAXNZ; j++) {
@@ -65,18 +65,62 @@ ellpack_matrix ConvertToELLPACK(sparse_matrix* matrix){
 }
 
 multivector ELLPACKProduct(ellpack_matrix* matrix, multivector* vector){
+    if (matrix->N != vector->m){
+        printf("Impossibile eseguire prodotto matrice multivettore con queste strutture dati.");
+        exit(0);
+    }
     int m = matrix->M;
     int maxnzr = matrix->MAXNZ;
     multivector result;
     result.m = matrix->M;
-    result.n = 1;
+    result.n = vector->n;
     result.coeff = (float **) malloc(sizeof(float *) * result.m);
-    for (int i = 0; i < matrix->M; i++) {
-        double t = 0;
-        for (int j = 0; j < matrix->MAXNZ; j++) {
-            t = t + matrix->AS[i][j] * vector->coeff[0][matrix->JA[i][j]];
+    printf("MAXNZ: %d",matrix->MAXNZ);
+    fflush(stdout);
+    int op = 0;
+    for (int i = 0; i < result.m; i++) {
+        result.coeff[i] = (float *) calloc(result.n, sizeof(float));
+        for (int k = 0; k < result.n; k++) {
+            float t = 0;
+            for (int j = 0; j < matrix->MAXNZ; j++) {
+                t = t + matrix->AS[i][j]*vector->coeff[matrix->JA[i][j]][k];
+                op++;
+            }
+            result.coeff[i][k] = t;
         }
-        result.coeff[0][i] = t;
     }
+    printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix.M * vector.n * MAXNZ operazioni :)
+    return result;
+}
+
+multivector OptimizedELLPACKProduct(ellpack_matrix* matrix, multivector* vector){
+    if (matrix->N != vector->m){
+        printf("Impossibile eseguire prodotto matrice multivettore con queste strutture dati.");
+        exit(0);
+    }
+    int m = matrix->M;
+    int maxnzr = matrix->MAXNZ;
+    multivector result;
+    result.m = matrix->M;
+    result.n = vector->n;
+    result.coeff = (float **) malloc(sizeof(float *) * result.m);
+    printf("MAXNZ: %d",matrix->MAXNZ);
+    fflush(stdout);
+    int op = 0;
+    for (int i = 0; i < result.m; i++) {
+        result.coeff[i] = (float *) calloc(result.n, sizeof(float));
+        for (int k = 0; k < result.n; k++) {
+            float t = 0;
+            int prev_JA = -1;
+            for (int j = 0; j < matrix->MAXNZ; j++) {
+                if (prev_JA>=matrix->JA[i][j]) break;
+                prev_JA = matrix->JA[i][j];
+                t = t + matrix->AS[i][j]*vector->coeff[prev_JA][k];
+                op++;
+            }
+            result.coeff[i][k] = t;
+        }
+    }
+    printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix.M * vector.n * MAXNZ operazioni :)
     return result;
 }

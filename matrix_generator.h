@@ -21,14 +21,13 @@ typedef struct{
 
 
 
-sparse_matrix GenerateSparseMatrix(int m, int n) {
+sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
     sparse_matrix new_matrix;
     new_matrix.m = m;
     new_matrix.n = n;
     new_matrix.nz = 0;
     new_matrix.coeff = (float **)malloc(sizeof(float*)*m);
 
-    int max_nz = 5;         // numero massimo di elementi non nulli per riga
     int row_nz;             // numero di elementi non nulli nella riga corrente
     int i, j, k;
 
@@ -57,7 +56,10 @@ sparse_matrix GenerateSparseMatrix(int m, int n) {
     // Stampa della matrice
     for (i = 0; i < m; i++) {
         for (j = 0; j < n; j++) {
+            if (new_matrix.coeff[i][j]==0.0) printf("\033[0;33m"); //Set the text to the color red
             printf("%f ", new_matrix.coeff[i][j]);
+            if (new_matrix.coeff[i][j]==0.0) printf("\033[0m"); //Resets the text to default color
+
         }
         printf("\n");
     }
