@@ -8,10 +8,30 @@
 typedef struct{
     int m;              //Numero righe matrice
     int n;              //Numero colonne matrice
+    int nz;             //Numero non zeri
     int*        irp;    //Vettore dei puntatori all'inizio di ciascuna riga
     float*      as;     //Vettore dei coefficienti
-    int*        js;     //Vettore degli indici di colonna
+    int*        ja;     //Vettore degli indici di colonna
 } csr_matrix;
+
+void stampaMatriceCsr(csr_matrix mat){
+    printf("AS\n");
+    for(int i = 0; i < mat.nz; i++){
+        printf("%f",mat.as[i]);
+        printf(" ");
+    }
+    printf("\nJS\n");
+    for(int i = 0; i < mat.nz; i++){
+        printf("%d",mat.ja[i]);
+        printf(" ");
+    }
+    printf("\nIRP\n");
+    for(int i = 0; i <= mat.m; i++){
+        printf("%d",mat.irp[i]);
+        printf(" ");
+    }
+    printf("\n");
+}
 
 csr_matrix convertToCsr(sparse_matrix matrix){
     //Nuova matrice
@@ -19,12 +39,13 @@ csr_matrix convertToCsr(sparse_matrix matrix){
     //Alloco i vettori
     convertedMatrix.m = matrix.m;
     convertedMatrix.n = matrix.n;
+    convertedMatrix.nz = matrix.nz;
     convertedMatrix.as = (float*)malloc(matrix.nz*sizeof(float));
     if(convertedMatrix.as == NULL){
         exit(1);
     }
-    convertedMatrix.js = (int*)malloc(matrix.nz*sizeof(int));
-    if(convertedMatrix.js == NULL){
+    convertedMatrix.ja = (int*)malloc(matrix.nz*sizeof(int));
+    if(convertedMatrix.ja == NULL){
         exit(1);
     }
     convertedMatrix.irp = (int*)malloc((matrix.m +1)*sizeof(int));
@@ -39,7 +60,7 @@ csr_matrix convertToCsr(sparse_matrix matrix){
             float elem = matrix.coeff[i][j];
             if(elem != 0){
                 convertedMatrix.as[nz] = elem;
-                convertedMatrix.js[nz] = j; 
+                convertedMatrix.ja[nz] = j; 
                 nz++;
             }
         }

@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define ROWS 10
-#define COLS 10
+#ifndef _MATRIXGENERATORH_
+#define _MATRIXGENERATORH_ 
+
 #define MAX_RANDOM_VALUE 10
 
 typedef struct{
@@ -17,9 +18,32 @@ typedef struct{
     int m;              //Numero righe multivettore
     int n;              //Numero colonne multivettore
     float**      coeff; //Vettore dei coefficienti
-} multivector;
+} matrix;
 
+void stampaMatrice(matrix mat){
+    int m = mat.m;
+    int n = mat.n;
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            printf("%f ", mat.coeff[i][j]);
+        }
+        printf("\n");
+    }
+}
 
+void stampaMatriceSparsa(sparse_matrix mat){
+    int m = mat.m;
+    int n = mat.n;
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (mat.coeff[i][j]==0.0) printf("\033[0;33m"); //Set the text to the color red
+            printf("%f ", mat.coeff[i][j]);
+            if (mat.coeff[i][j]==0.0) printf("\033[0m"); //Resets the text to default color
+
+        }
+        printf("\n");
+    }
+}
 
 sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
     sparse_matrix new_matrix;
@@ -52,18 +76,8 @@ sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
             new_matrix.coeff[i][k] = (float)rand()/(float)(RAND_MAX/MAX_RANDOM_VALUE);;     // valore casuale tra 1 e 10
         }
     }
-
     // Stampa della matrice
-    for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++) {
-            if (new_matrix.coeff[i][j]==0.0) printf("\033[0;33m"); //Set the text to the color red
-            printf("%f ", new_matrix.coeff[i][j]);
-            if (new_matrix.coeff[i][j]==0.0) printf("\033[0m"); //Resets the text to default color
-
-        }
-        printf("\n");
-    }
-    printf("\n\n");
+    // stampaMatriceSparsa(new_matrix);
 
     for(int i=0; i < m; i++) {
         for (int j = 0; j < n; j++) {
@@ -74,8 +88,8 @@ sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
     return new_matrix;
 }
 
-multivector GenerateMultivector(int m, int n) {
-    multivector new_multivector;
+matrix GenerateMultivector(int m, int n) {
+    matrix new_multivector;
     new_multivector.m = m;
     new_multivector.n = n;
     new_multivector.coeff = (float **)malloc(sizeof(float*)*m);
@@ -104,12 +118,9 @@ multivector GenerateMultivector(int m, int n) {
     }
 
     // Stampa della matrice
-    for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++) {
-            printf("%f ", new_multivector.coeff[i][j]);
-        }
-        printf("\n");
-    }
-
+    // stampaMatrice(new_multivector);
+    
     return new_multivector;
 }
+
+#endif
