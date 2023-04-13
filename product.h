@@ -1,6 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include "csr.h"
 
-float** calcola_prodotto_seriale(csr_matrix csrMatrix, multivector vector){
+float** calcola_prodotto_seriale_csr(csr_matrix csrMatrix, multivector vector){
     
     if(csrMatrix.n != vector.m){
         printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");

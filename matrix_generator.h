@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define ROWS 10
-#define COLS 10
 #define MAX_RANDOM_VALUE 10
 
 typedef struct{
@@ -19,7 +17,33 @@ typedef struct{
     float**      coeff; //Vettore dei coefficienti
 } multivector;
 
+void PrintSparseMatrix(sparse_matrix matrix){
+    // Stampa della matrice
+    for (int i = 0; i < matrix.m; i++) {
+        for (int j = 0; j < matrix.n; j++) {
+            if (matrix.coeff[i][j]==0.0) printf("\033[0;33m"); //Set the text to the color red
+            printf("%f ", matrix.coeff[i][j]);
+            if (matrix.coeff[i][j]==0.0) printf("\033[0m"); //Resets the text to default color
 
+        }
+        printf("\n");
+    }
+    printf("\n\n");
+}
+
+void PrintMatrix(multivector matrix){
+    // Stampa della matrice
+    for (int i = 0; i < matrix.m; i++) {
+        for (int j = 0; j < matrix.n; j++) {
+            if (matrix.coeff[i][j]==0.0) printf("\033[0;33m"); //Set the text to the color red
+            printf("%f ", matrix.coeff[i][j]);
+            if (matrix.coeff[i][j]==0.0) printf("\033[0m"); //Resets the text to default color
+
+        }
+        printf("\n");
+    }
+    printf("\n\n");
+}
 
 sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
     sparse_matrix new_matrix;
@@ -53,17 +77,7 @@ sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
         }
     }
 
-    // Stampa della matrice
-    for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++) {
-            if (new_matrix.coeff[i][j]==0.0) printf("\033[0;33m"); //Set the text to the color red
-            printf("%f ", new_matrix.coeff[i][j]);
-            if (new_matrix.coeff[i][j]==0.0) printf("\033[0m"); //Resets the text to default color
-
-        }
-        printf("\n");
-    }
-    printf("\n\n");
+    PrintSparseMatrix(new_matrix);
 
     for(int i=0; i < m; i++) {
         for (int j = 0; j < n; j++) {
