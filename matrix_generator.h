@@ -31,6 +31,20 @@ void stampaMatrice(matrix mat){
     }
 }
 
+void stampaMatriceSuFile(char* filename, matrix mat){
+    int m = mat.m;
+    int n = mat.n;
+    FILE *f = fopen(filename, "a");
+    printf("file aperto\n");
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            fprintf(f,"%f ", mat.coeff[i][j]);
+        }
+        fprintf(f,"\n");
+    }
+    fclose(f);
+}
+
 void stampaMatriceSparsa(sparse_matrix mat){
     int m = mat.m;
     int n = mat.n;
@@ -50,7 +64,6 @@ sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
     new_matrix.m = m;
     new_matrix.n = n;
     new_matrix.nz = 0;
-    new_matrix.coeff = (float **)malloc(sizeof(float*)*m);
 
     int row_nz;             // numero di elementi non nulli nella riga corrente
     int i, j, k;
