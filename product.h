@@ -1,7 +1,7 @@
 #include "csr.h"
 
 #ifndef _PRODUCTH_
-#define _PRODUCTH_ 
+#define _PRODUCTH_
 
 matrix prepara_risultato(int m, int n){
     matrix result;

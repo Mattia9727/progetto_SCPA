@@ -3,7 +3,7 @@
 #include <time.h>
 
 #ifndef _MATRIXGENERATORH_
-#define _MATRIXGENERATORH_ 
+#define _MATRIXGENERATORH_
 
 #define MAX_RANDOM_VALUE 10
 
@@ -132,7 +132,7 @@ matrix GenerateMultivector(int m, int n) {
 
     // Stampa della matrice
     // stampaMatrice(new_multivector);
-    
+
     return new_multivector;
 }
 
