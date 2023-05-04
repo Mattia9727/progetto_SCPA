@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "ellpack.h"
+#include "../matrices/format/ellpack.h"
 
 matrix calcola_prodotto_seriale_ellpack(ellpack_matrix ellpackMatrix, matrix vector, bool opt){
 

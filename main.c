@@ -1,9 +1,9 @@
 #include <malloc.h>
 #include <stdlib.h>
-#include "product_csr_openmp.h"
+#include "product/product_csr_openmp.h"
 #include <time.h>
 
-#define NFILES 2
+#define NFILES 8
 
 void main(){
     coo_matrix mat;
@@ -34,7 +34,7 @@ void main(){
         "test_matrices/matrix_files/rdist2.mtx",
         "test_matrices/matrix_files/raefsky2.mtx",
     }; 
-    /*
+    
     for(int i = 0; i < NFILES; i++){
         printf("%s\n",matFiles[i]);
         mat = getMatrix(matFiles[i]);
@@ -60,7 +60,7 @@ void main(){
     
         }
     }
-    */
+    /*
     mat = getMatrix("test_matrices/matrix_files/prova_simm.mtx");
     
     matrix new_matrix;
@@ -82,5 +82,5 @@ void main(){
         new_matrix.coeff[mat.rows[i]][mat.cols[i]] = (float)(mat.values[i]);
     }
     stampaMatrice(new_matrix);
-       
+    */
 }

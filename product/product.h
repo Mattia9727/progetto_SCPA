@@ -1,4 +1,4 @@
-#include "csr.h"
+#include "../matrices/format/csr.h"
 
 #ifndef _PRODUCTH_
 #define _PRODUCTH_

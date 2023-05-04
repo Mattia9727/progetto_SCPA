@@ -1,5 +1,5 @@
-#include "matrix_generator.h"
-#include "test_matrices/matrix_retriever.h"
+#include "../matrix_generator.h"
+#include "../matrix_retriever.h"
 #include <malloc.h>
 #include <stdlib.h>
 

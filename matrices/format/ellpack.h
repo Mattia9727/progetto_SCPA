@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
-#include "matrix_generator.h"
-#include "test_matrices/matrix_retriever.h"
+#include "../matrix_generator.h"
+#include "../matrix_retriever.h"
 
 #define ROWS 10
 #define COLS 10
