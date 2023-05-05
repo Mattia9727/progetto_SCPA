@@ -4,9 +4,9 @@
 #include <time.h>
 #include <math.h>
 
-#define NFILES 20
+#define NFILES 30
 #define NREPETITIONS 50
-#define FILEHEADER "MatrixName, NRows, NCol, NZ, k, FLOPS\n"
+#define FILEHEADER "MatrixName, NRows, NCol, NZ, k, MFLOPS\n"
 
 void main(){
     coo_matrix mat;
@@ -34,13 +34,23 @@ void main(){
         "matrices/matrix_files/mhd4800a.mtx",
         "matrices/matrix_files/bcsstk17.mtx",
         "matrices/matrix_files/raefsky2.mtx",
+        "matrices/matrix_files/thermal1.mtx",
         "matrices/matrix_files/af23560.mtx",
+        "matrices/matrix_files/thermomech_TK.mtx",
         "matrices/matrix_files/olafu.mtx",
+        "matrices/matrix_files/FEM_3D_thermal1.mtx",
         "matrices/matrix_files/lung2.mtx",
+        "matrices/matrix_files/dc1.mtx",
+        "matrices/matrix_files/amazon0302.mtx",
+        "matrices/matrix_files/roadNet-PA.mtx",
         "matrices/matrix_files/cop20k_A.mtx",
         "matrices/matrix_files/mac_econ_fwd500.mtx",
         "matrices/matrix_files/cant.mtx",
+        "matrices/matrix_files/webbase-1M.mtx",
+        "matrices/matrix_files/thermal2.mtx",
+        "matrices/matrix_files/nlpkkt80.mtx",
         "matrices/matrix_files/PR02R.mtx",
+        "matrices/matrix_files/af_1_k101.mtx",
         "matrices/matrix_files/ML_Laplace.mtx",
         "matrices/matrix_files/Cube_Coup_dt0.mtx",
     }; 
@@ -64,8 +74,8 @@ void main(){
                 end = clock();
                 timeSumCsrOmp += (double)(end - begin) / CLOCKS_PER_SEC;
             }
-        fprintf(resultsSer,"%s, %d, %d, %d, %d, %f\n",matFiles[i],converted_matrix.m, converted_matrix.n, converted_matrix.nz, col_multivector[j], ((2*col_multivector[j]*converted_matrix.nz)/(timeSumSer/NREPETITIONS))/pow(10,6));
-        fprintf(resultsCsrOmp,"%s, %d, %d, %d, %d, %f\n",matFiles[i],converted_matrix.m, converted_matrix.n, converted_matrix.nz, col_multivector[j], ((2*col_multivector[j]*converted_matrix.nz)/(timeSumCsrOmp/NREPETITIONS))/pow(10,6)); 
+        fprintf(resultsSer,"%s, %d, %d, %d, %d, %f\n",matFiles[i],converted_matrix.m, converted_matrix.n, converted_matrix.nz, col_multivector[j], ((2*col_multivector[j]/pow(10,6))*converted_matrix.nz)/(timeSumSer/NREPETITIONS));
+        fprintf(resultsCsrOmp,"%s, %d, %d, %d, %d, %f\n",matFiles[i],converted_matrix.m, converted_matrix.n, converted_matrix.nz, col_multivector[j], ((2*col_multivector[j]/pow(10,6))*converted_matrix.nz)/(timeSumCsrOmp/NREPETITIONS));
         }
     }
     fclose(resultsSer);
