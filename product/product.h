@@ -1,7 +1,8 @@
-#include "../matrices/format/csr.h"
-
 #ifndef _PRODUCTH_
 #define _PRODUCTH_
+
+#include "../matrices/format/csr.h"
+#include "../matrices/matrix_generator.h"
 
 matrix prepara_risultato(int m, int n){
     matrix result;
@@ -40,6 +41,16 @@ void calcola_prodotto_seriale(csr_matrix csrMatrix, matrix vector, matrix* resul
             result->coeff[i][k] = t;
         }
     }
+
 }
+
+void checkResult(matrix m1, matrix m2){
+        for(int i = 0; i < m1.m; i++){
+            for(int j = 0; j < m1.n; j++){
+                if(m1.coeff[i][j] != m2.coeff[i][j])
+                exit(-1);
+            }
+        }
+    }
 
 #endif

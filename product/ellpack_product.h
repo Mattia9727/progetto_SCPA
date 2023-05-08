@@ -1,3 +1,6 @@
+#ifndef _ELLPACKPRODUCTH_
+#define _ELLPACKPRODUCTH_
+
 #include <stdbool.h>
 #include "../matrices/format/ellpack.h"
 
@@ -30,3 +33,5 @@ matrix calcola_prodotto_omp_ellpack(ellpack_matrix ellpackMatrix, matrix vector,
     stampaMatrice(result);
     return result;
 }*/
+
+#endif

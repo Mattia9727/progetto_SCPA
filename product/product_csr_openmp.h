@@ -1,9 +1,11 @@
+
+#ifndef _PRODUCTCSROPENMPH_
+#define _PRODUCTCSROPENMPH_ 
+
 #include <stdio.h>
 #include <omp.h>
 #include "product.h"
 
-#ifndef _PRODUCTCSROPENMPH_
-#define _PRODUCTCSROPENMPH_ 
 
 void calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multivector,matrix* result){
     

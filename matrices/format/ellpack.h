@@ -1,3 +1,6 @@
+#ifndef _ELLPACKH_
+#define _ELLPACKH_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -96,7 +99,7 @@ ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
         col_arr[mat.rows[i]]++;
     }
 
-    PrintELLPACKMatrix(converted_matrix);
+    //PrintELLPACKMatrix(converted_matrix);
 
     return converted_matrix;
 }
@@ -193,3 +196,5 @@ matrix OptimizedELLPACKProduct(ellpack_matrix* mat, matrix* vector){
     printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix.M * vector.n * MAXNZ operazioni :)
     return result;
 }
+
+#endif

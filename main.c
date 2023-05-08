@@ -3,6 +3,7 @@
 #include "product/product_csr_openmp.h"
 #include <time.h>
 #include <math.h>
+#include "matrices/format/ellpack.h"
 
 #define NFILES 30
 #define NREPETITIONS 50
@@ -11,6 +12,7 @@
 void main(){
     coo_matrix mat;
     csr_matrix converted_matrix;
+    ellpack_matrix ellpack_mat;
     matrix multivector, result;
     clock_t begin, end;
     double timeSumSer = 0.0, timeSumCsrOmp = 0.0;
@@ -61,6 +63,7 @@ void main(){
         printf("%s\n",matFiles[i]);
         mat = getMatrix(matFiles[i]);
         converted_matrix = convertToCsrFromCoo(mat);
+        //ellpack_mat = ConvertCOOToELLPACK(mat);
         for(int j = 0; j < 7; j++){
             multivector = GenerateMultivector(mat.n,col_multivector[j]);
             result = prepara_risultato(converted_matrix.m, multivector.n);

@@ -1,10 +1,13 @@
-#include "../matrix_generator.h"
-#include "../matrix_retriever.h"
-#include <malloc.h>
-#include <stdlib.h>
-
 #ifndef _CRSH_
 #define _CSRH_ 
+
+#include "../matrix_generator.h"
+#include "coo.h"
+#include <malloc.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 
 typedef struct{
     int m;              //Numero righe matrice
@@ -74,9 +77,6 @@ csr_matrix convertToCsr(sparse_matrix mat){
 }
 
 csr_matrix convertToCsrFromCoo(coo_matrix mat){
-
-    int cumsum = 0;
-    int temp, row, dest, last = 0;
     csr_matrix convertedMatrix;
 
     // Preparo la nuova struttura
@@ -95,30 +95,33 @@ csr_matrix convertToCsrFromCoo(coo_matrix mat){
     if(convertedMatrix.irp == NULL){
         exit(1);
     }
-    
-    //Converto
-    for(int i = 0; i < mat.nz; i++){
-        convertedMatrix.irp[mat.rows[i]] = 1;
+    //calcola il numero di elementi non zero per ogni riga di A
+    memset(convertedMatrix.irp, 0, (mat.m+1) * sizeof(int));
+
+    for (int n = 0; n < mat.nz; n++) {
+        convertedMatrix.irp[mat.rows[n]]++;
     }
-    
-    for(int i = 0; i < mat.m; i++){
-        temp = convertedMatrix.irp[i];
+
+    //calcola la somma cumulativa degli elementi non zero per riga per ottenere Bp[]
+    for (int i = 0, cumsum = 0; i < mat.m; i++) {
+        int temp = convertedMatrix.irp[i];
         convertedMatrix.irp[i] = cumsum;
         cumsum += temp;
     }
     convertedMatrix.irp[mat.m] = mat.nz;
-    
-    for(int i = 0; i < mat.nz; i++){
-        row = mat.rows[i];
-        dest = convertedMatrix.irp[row];
-        convertedMatrix.as[dest] = mat.values[i];
-        convertedMatrix.ja[dest] = mat.cols[i];
+
+    for (int n = 0; n < mat.nz; n++) {
+        int row = mat.rows[n];
+        int dest = convertedMatrix.irp[row];
+
+        convertedMatrix.ja[dest] = mat.cols[n];
+        convertedMatrix.as[dest] = mat.values[n];
 
         convertedMatrix.irp[row]++;
     }
 
-    for(int i = 0; i <= mat.m; i++){
-        temp = convertedMatrix.irp[i];
+     for (int i = 0, last = 0; i <= mat.m; i++) {
+        int temp = convertedMatrix.irp[i];
         convertedMatrix.irp[i] = last;
         last = temp;
     }
