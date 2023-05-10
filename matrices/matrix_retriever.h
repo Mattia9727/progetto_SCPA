@@ -1,15 +1,11 @@
+#ifndef _MATRIXRETRIEVERH_
+#define _MATRIXRETRIEVERH_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "mmio.c"
+#include "format/coo.h"
 
-typedef struct{
-    int m;                  //Numero righe matrice
-    int n;                  //Numero colonne matrice
-    int nz;                 //Numero non zeri
-    int*        cols;       //Vettore degli indici di colonna
-    int*        rows;       //Vettore degli indici di riga
-    double*     values;     //Vettore dei valori
-} coo_matrix;
 
 coo_matrix getMatrix(char* matrixFileName){
     MM_typecode matcode;
@@ -47,7 +43,6 @@ coo_matrix getMatrix(char* matrixFileName){
         if(is_pattern){
             fscanf(f, "%d %d\n", &(mat.rows[i]), &(mat.cols[i]));
             mat.values[i] = 1.0;
-            printf("\tpattern\n");
         }else{
             fscanf(f, "%d %d %lg\n", &(mat.rows[i]), &(mat.cols[i]), &(mat.values[i]));
         }
@@ -84,6 +79,8 @@ coo_matrix getMatrix(char* matrixFileName){
 
     return mat;
 }
+
+#endif
 
 
 

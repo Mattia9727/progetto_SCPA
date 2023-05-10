@@ -1,9 +1,9 @@
+#ifndef _MATRIXGENERATORH_
+#define _MATRIXGENERATORH_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-#ifndef _MATRIXGENERATORH_
-#define _MATRIXGENERATORH_
 
 #define MAX_RANDOM_VALUE 10
 
@@ -107,7 +107,6 @@ matrix GenerateMultivector(int m, int n) {
     new_multivector.n = n;
     new_multivector.coeff = (float **)malloc(sizeof(float*)*m);
 
-    int max_nz = 5;         // numero massimo di elementi non nulli per riga
     int i, j, k;
 
     // Allocazione della memoria per il doppio puntatore
@@ -129,9 +128,8 @@ matrix GenerateMultivector(int m, int n) {
             new_multivector.coeff[i][j] = (float)rand()/(float)(RAND_MAX/MAX_RANDOM_VALUE);;     // valore casuale tra 1 e 10
         }
     }
-
     // Stampa della matrice
-    // stampaMatrice(new_multivector);
+    //stampaMatrice(new_multivector);
 
     return new_multivector;
 }

@@ -1,9 +1,12 @@
+#ifndef _ELLPACKH_
+#define _ELLPACKH_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
-#include "matrix_generator.h"
-#include "test_matrices/matrix_retriever.h"
+#include "../matrix_generator.h"
+#include "../matrix_retriever.h"
 
 #define ROWS 10
 #define COLS 10
@@ -101,6 +104,7 @@ ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
 
 
     //PrintELLPACKMatrix(converted_matrix);
+    //PrintELLPACKMatrix(converted_matrix);
 
     return converted_matrix;
 }
@@ -164,3 +168,5 @@ void OptimizedELLPACKProduct(ellpack_matrix* mat, matrix* vector, matrix* result
     }
     printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix->M * vector->n * MAXNZ operazioni :)
 }
+
+#endif
