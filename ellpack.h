@@ -71,7 +71,8 @@ ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
     converted_matrix.m = mat.m;
     converted_matrix.n = mat.n;
     converted_matrix.maxnz = 0;
-    int row_arr[mat.m];
+    int* row_arr;
+    row_arr = malloc(sizeof(int)*mat.m);
     for (int i=0; i<mat.m; i++) {row_arr[i]=0;}
     for (int i=0; i<mat.nz; i++){
         row_arr[mat.rows[i]]++;
@@ -79,7 +80,7 @@ ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
     for (int i=0; i<mat.m; i++){
         if (converted_matrix.maxnz < row_arr[mat.rows[i]]) converted_matrix.maxnz = row_arr[mat.rows[i]];
     }
-
+    free(row_arr);
     converted_matrix.AS = (float**)calloc(converted_matrix.m * converted_matrix.maxnz,sizeof(float));
     converted_matrix.JA = (int**)calloc(converted_matrix.m * converted_matrix.maxnz,sizeof(int));
 
@@ -88,97 +89,68 @@ ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
         converted_matrix.JA[i] = (int *) calloc(converted_matrix.maxnz, sizeof(int));
     }
 
-    int col_arr[converted_matrix.m];
+    int* col_arr;
+    col_arr = malloc(sizeof(int)*converted_matrix.m);
     for (int i=0; i<converted_matrix.m; i++) {col_arr[i]=0;}
     for (int i=0; i<mat.nz; i++){
         converted_matrix.AS[mat.rows[i]][col_arr[mat.rows[i]]] = (float)mat.values[i];
         converted_matrix.JA[mat.rows[i]][col_arr[mat.rows[i]]] = mat.cols[i];
         col_arr[mat.rows[i]]++;
     }
+    free(col_arr);
 
-    PrintELLPACKMatrix(converted_matrix);
+
+    //PrintELLPACKMatrix(converted_matrix);
 
     return converted_matrix;
 }
 
-matrix ELLPACKProduct(ellpack_matrix* mat, matrix* vector){
-    if (mat->n != vector->m){
-        printf("Impossibile eseguire prodotto matrice multivettore con queste strutture dati.");
-        exit(0);
-    }
-    int m = mat->m;
-    int maxnzr = mat->maxnz;
-    matrix result;
-    result.m = mat->m;
-    result.n = vector->n;
-    result.coeff = (float **) malloc(sizeof(float *) * result.m);
-    printf("MAXNZ: %d",mat->maxnz);
-    fflush(stdout);
-    int op = 0;
-    for (int i = 0; i < result.m; i++) {
-        result.coeff[i] = (float *) calloc(result.n, sizeof(float));
-        for (int k = 0; k < result.n; k++) {
+void ELLPACKProduct(ellpack_matrix* mat, matrix* vector, matrix* result){
+
+    //int op = 0;
+    for (int i = 0; i < result->m; i++) {
+        result->coeff[i] = (float *) calloc(result->n, sizeof(float));
+        for (int k = 0; k < result->n; k++) {
             float t = 0;
             for (int j = 0; j < mat->maxnz; j++) {
                 t = t + mat->AS[i][j]*vector->coeff[mat->JA[i][j]][k];
-                op++;
+                //op++;
             }
-            result.coeff[i][k] = t;
+            result->coeff[i][k] = t;
         }
     }
-    printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix.M * vector.n * MAXNZ operazioni :)
-    return result;
+    //printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix->M * vector->n * MAXNZ operazioni :)
 }
 
-/*matrix OmpELLPACKProduct(ellpack_matrix* mat, matrix* vector){
-    if (mat->n != vector->m){
-        printf("Impossibile eseguire prodotto matrice multivettore con queste strutture dati.");
-        exit(0);
-    }
-    int m = mat->m;
-    int maxnzr = mat->maxnz;
-    matrix result;
-    result.m = mat->m;
-    result.n = vector->n;
-    result.coeff = (float **) malloc(sizeof(float *) * result.m);
-    printf("MAXNZ: %d",mat->maxnz);
-    fflush(stdout);
-    int op = 0;
-    #pragma omp parallel for
-    for (int i = 0; i < result.m; i++) {
-        result.coeff[i] = (float *) calloc(result.n, sizeof(float));
-        for (int k = 0; k < result.n; k++) {
-            float t = 0;
+void OmpELLPACKProduct(ellpack_matrix* mat, matrix* vector, matrix* result){
+
+    //int op = 0;
+
+    float t;
+
+    int i;
+
+    #pragma omp parallel for shared(result, mat, vector) private(t,i)
+    for (i = 0; i < result->m; i++) {
+        result->coeff[i] = (float *) calloc(result->n, sizeof(float));
+        for (int k = 0; k < result->n; k++) {
+            t = 0;
             for (int j = 0; j < mat->maxnz; j++) {
-                int tid = omp_get_thread_num();
-                printf("Sto parallelizzando con thread %d",tid);
                 t = t + mat->AS[i][j]*vector->coeff[mat->JA[i][j]][k];
-                op++;
+                //op++;
             }
-            result.coeff[i][k] = t;
+            result->coeff[i][k] = t;
         }
     }
-    printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix.M * vector.n * MAXNZ operazioni :)
-    return result;
-}*/
+    //printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix->M * vector->n * MAXNZ operazioni :)
+}
 
-matrix OptimizedELLPACKProduct(ellpack_matrix* mat, matrix* vector){
-    if (mat->n != vector->m){
-        printf("Impossibile eseguire prodotto matrice multivettore con queste strutture dati.");
-        exit(0);
-    }
-    int m = mat->m;
-    int maxnzr = mat->maxnz;
-    matrix result;
-    result.m = mat->m;
-    result.n = vector->n;
-    result.coeff = (float **) malloc(sizeof(float *) * result.m);
-    printf("MAXNZ: %d",mat->maxnz);
-    fflush(stdout);
+void OptimizedELLPACKProduct(ellpack_matrix* mat, matrix* vector, matrix* result){
+
     int op = 0;
-    for (int i = 0; i < result.m; i++) {
-        result.coeff[i] = (float *) calloc(result.n, sizeof(float));
-        for (int k = 0; k < result.n; k++) {
+    for (int i = 0; i < result->m; i++) {
+        result->coeff[i] = (float *) calloc(result->n, sizeof(float));
+        for (int k = 0; k < result->n; k++) {
             float t = 0;
             int prev_JA = -1;
             for (int j = 0; j < mat->maxnz; j++) {
@@ -187,9 +159,8 @@ matrix OptimizedELLPACKProduct(ellpack_matrix* mat, matrix* vector){
                 t = t + mat->AS[i][j]*vector->coeff[prev_JA][k];
                 op++;
             }
-            result.coeff[i][k] = t;
+            result->coeff[i][k] = t;
         }
     }
-    printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix.M * vector.n * MAXNZ operazioni :)
-    return result;
+    printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix->M * vector->n * MAXNZ operazioni :)
 }
