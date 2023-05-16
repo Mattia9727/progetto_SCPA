@@ -30,7 +30,7 @@ void OmpELLPACKProduct(ellpack_matrix mat, matrix vector, matrix* result){
 
     int i;
     
-    #pragma omp parallel for schedule(static, 1) shared(result, mat, vector) private(t,i)
+    #pragma omp parallel for schedule(static) shared(result, mat, vector) private(t,i)
     for (i = 0; i < result->m; i++) {
         for (int k = 0; k < result->n; k++) {
             t = 0;
