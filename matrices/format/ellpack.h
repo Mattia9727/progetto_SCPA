@@ -75,8 +75,7 @@ ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
     converted_matrix.n = mat.n;
     converted_matrix.maxnz = 0;
     int* row_arr;
-    row_arr = malloc(sizeof(int)*mat.m);
-    for (int i=0; i<mat.m; i++) {row_arr[i]=0;}
+    row_arr = (int*)calloc(mat.m,sizeof(int));
     for (int i=0; i<mat.nz; i++){
         row_arr[mat.rows[i]]++;
     }
@@ -84,24 +83,20 @@ ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
         if (converted_matrix.maxnz < row_arr[i]) converted_matrix.maxnz = row_arr[i];
     }
     free(row_arr);
-    converted_matrix.AS = (double**)malloc(converted_matrix.m*sizeof(double*));
-    converted_matrix.JA = (int**)malloc(converted_matrix.m*sizeof(int*));
+    converted_matrix.AS = (double**)calloc(converted_matrix.m * converted_matrix.maxnz,sizeof(double*));
+    converted_matrix.JA = (int**)calloc(converted_matrix.m * converted_matrix.maxnz,sizeof(int*));
 
     for (int i=0; i<mat.m; i++){
         converted_matrix.AS[i] = (double *) calloc(converted_matrix.maxnz, sizeof(double));
         converted_matrix.JA[i] = (int *) calloc(converted_matrix.maxnz, sizeof(int));
     }
 
-    //PrintELLPACKMatrix(converted_matrix);
-
     int* col_arr;
-    col_arr = malloc(sizeof(int)*converted_matrix.m);
-    for (int i=0; i<converted_matrix.m; i++) {col_arr[i]=0;}
+    col_arr = (int*)calloc(converted_matrix.m,sizeof(int));
     for (int i=0; i<mat.nz; i++){
         converted_matrix.AS[mat.rows[i]][col_arr[mat.rows[i]]] = (double)mat.values[i];
-        converted_matrix.JA[mat.rows[i]][col_arr[mat.rows[i]]] = (int)mat.cols[i];
+        converted_matrix.JA[mat.rows[i]][col_arr[mat.rows[i]]] = mat.cols[i];
         col_arr[mat.rows[i]]++;
-
     }
     free(col_arr);
 

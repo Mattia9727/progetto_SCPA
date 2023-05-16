@@ -30,9 +30,8 @@ void OmpELLPACKProduct(ellpack_matrix mat, matrix vector, matrix* result){
 
     int i;
 
-    #pragma omp parallel for shared(result, mat, vector) private(t,i)
+    #pragma omp parallel for schedule(static, 1) shared(result, mat, vector) private(t,i)
     for (i = 0; i < result->m; i++) {
-        //result->coeff[i] = (double *) calloc(result->n, sizeof(double));
         for (int k = 0; k < result->n; k++) {
             t = 0;
             for (int j = 0; j < mat.maxnz; j++) {

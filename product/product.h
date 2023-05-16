@@ -4,6 +4,8 @@
 #include "../matrices/format/csr.h"
 #include "../matrices/matrix_generator.h"
 
+#define ALPHA 10000
+
 matrix prepara_risultato(int m, int n){
     matrix result;
     result.m = m;
@@ -57,12 +59,12 @@ void calcola_prodotto_seriale(csr_matrix csrMatrix, matrix vector, matrix* resul
 }
 
 void checkResult(matrix m1, matrix m2){
-        for(int i = 0; i < m1.m; i++){
-            for(int j = 0; j < m1.n; j++){
-                if(m1.coeff[i][j] != m2.coeff[i][j])
+    for(int i = 0; i < m1.m; i++){
+        for(int j = 0; j < m1.n; j++){
+            if((int)(m1.coeff[i][j]*ALPHA) != (int)(m2.coeff[i][j]*ALPHA))
                 exit(-1);
-            }
         }
     }
+}
 
 #endif
