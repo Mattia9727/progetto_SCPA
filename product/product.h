@@ -17,10 +17,22 @@ matrix prepara_risultato(int m, int n){
         exit(1);
     }
     for(int i = 0; i < m; i++){
-        coeff[i] = (double*)malloc(sizeof(double)*n);
+        coeff[i] = (double*)calloc(n,sizeof(double));
+        if(coeff[i] == NULL){
+            printf("Errore malloc i\n");
+            exit(1);
+        }
     }
     result.coeff = coeff;
     return result;
+}
+
+void free_matrix(matrix* result){
+
+    for(int i = 0; i < result->m; i++){
+        free(result->coeff[i]);
+    }
+    free(result->coeff);
 }
 
 void calcola_prodotto_seriale(csr_matrix csrMatrix, matrix vector, matrix* result){

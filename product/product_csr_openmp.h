@@ -14,7 +14,7 @@ void calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multivec
         exit(1);
     }
 
-    float partialSum;
+    double partialSum;
 
     int i;
 

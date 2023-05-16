@@ -102,7 +102,6 @@ ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
 
 
     //PrintELLPACKMatrix(converted_matrix);
-    //PrintELLPACKMatrix(converted_matrix);
 
     return converted_matrix;
 }
