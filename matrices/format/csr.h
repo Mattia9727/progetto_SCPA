@@ -62,7 +62,7 @@ csr_matrix convertToCsr(sparse_matrix mat){
     for(int i = 0; i < convertedMatrix.m; i++){
         convertedMatrix.irp[i] = nz;
         for(int j = 0; j < convertedMatrix.n; j++){
-            float elem = mat.coeff[i][j];
+            double elem = mat.coeff[i][j];
             if(elem != 0){
                 convertedMatrix.as[nz] = elem;
                 convertedMatrix.ja[nz] = j; 
