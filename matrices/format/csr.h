@@ -128,4 +128,10 @@ csr_matrix convertToCsrFromCoo(coo_matrix mat){
     return convertedMatrix;
 }
 
+void free_csr_matrix(csr_matrix* matrix){
+    free(matrix->irp);
+    free(matrix->as);
+    free(matrix->ja);
+}
+
 #endif

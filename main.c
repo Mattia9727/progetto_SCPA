@@ -90,12 +90,12 @@ void main(){
 
             fprintf(resultsSer,"%s, %d, %d, %d, %d, %f, %f\n",matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumSer/NREPETITIONS,((2*col_multivector[j]/pow(10,6))*converted_csr_matrix.nz)/(timeSumSer/NREPETITIONS));
             fprintf(resultsCsrOmp,"%s, %d, %d, %d, %d, %f, %f\n",matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumCsrOmp/NREPETITIONS,((2*col_multivector[j]/pow(10,6))*converted_csr_matrix.nz)/(timeSumCsrOmp/NREPETITIONS));
-            fprintf(resultsEllpackOmp,"%s, %d, %d, %d, %d, %f, %f\n",matFiles[i],converted_ellpack_matrix.m, converted_ellpack_matrix.n, converted_ellpack_matrix.nz, col_multivector[j], timeSumEllpackOmp/NREPETITIONS,((2*col_multivector[j]/pow(10,6))*converted_csr_matrix.nz)/(timeSumEllpackOmp/NREPETITIONS));
+            fprintf(resultsEllpackOmp,"%s, %d, %d, %d, %d, %f, %f\n",matFiles[i],converted_ellpack_matrix.m, converted_ellpack_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumEllpackOmp/NREPETITIONS,((2*col_multivector[j]/pow(10,6))*converted_csr_matrix.nz)/(timeSumEllpackOmp/NREPETITIONS));
 
             free_matrix(&result);
         }
         free_matrix(&multivector);
-        FreeCsrMatrix(&converted_csr_matrix);
+        free_csr_matrix(&converted_csr_matrix);
         FreeEllpackMatrix(&converted_ellpack_matrix);
     }
     fclose(resultsSer);
