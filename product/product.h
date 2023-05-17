@@ -4,7 +4,7 @@
 #include "../matrices/format/csr.h"
 #include "../matrices/matrix_generator.h"
 
-#define ALPHA 10000
+#define ALPHA 1000
 
 matrix prepara_risultato(int m, int n){
     matrix result;
