@@ -19,7 +19,7 @@ typedef struct {
     double** AS;
 } ellpack_matrix;
 
-void PrintELLPACKMatrix(ellpack_matrix matrix){
+void print_ellpack_matrix(ellpack_matrix matrix){
     printf("M = %d, N = %d, MAXNZ = %d \n\n",matrix.m, matrix.n, matrix.maxnz);
     printf("AS (Matrice di nonzeri): \n");
     for(int i=0; i < matrix.m; i++) {
@@ -40,7 +40,7 @@ void PrintELLPACKMatrix(ellpack_matrix matrix){
     printf("\n\n");
 }
 
-ellpack_matrix ConvertToELLPACK(sparse_matrix* matrix){
+ellpack_matrix convert_to_ellpack(sparse_matrix* matrix){
     ellpack_matrix new_matrix;
     new_matrix.m = matrix->m;
     new_matrix.n = matrix->n;
@@ -69,7 +69,7 @@ ellpack_matrix ConvertToELLPACK(sparse_matrix* matrix){
     return new_matrix;
 }
 
-ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
+ellpack_matrix convert_coo_to_ellpack(coo_matrix mat){
     ellpack_matrix converted_matrix;
     converted_matrix.m = mat.m;
     converted_matrix.n = mat.n;
@@ -101,12 +101,12 @@ ellpack_matrix ConvertCOOToELLPACK(coo_matrix mat){
     free(col_arr);
 
 
-    //PrintELLPACKMatrix(converted_matrix);
+    //print_ellpack_matrix(converted_matrix);
 
     return converted_matrix;
 }
 
-void FreeEllpackMatrix(ellpack_matrix* matrix){
+void free_ellpack_matrix(ellpack_matrix* matrix){
     for (int i=0; i<matrix->maxnz; i++){
         free(matrix->AS[i]);
         free(matrix->JA[i]);

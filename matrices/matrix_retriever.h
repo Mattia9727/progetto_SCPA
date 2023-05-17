@@ -7,7 +7,7 @@
 #include "format/coo.h"
 
 
-coo_matrix getMatrix(char* matrixFileName){
+coo_matrix get_matrix(char* matrixFileName){
     MM_typecode matcode;
     FILE *f;
     coo_matrix mat, total_mat;

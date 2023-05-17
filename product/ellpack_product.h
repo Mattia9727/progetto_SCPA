@@ -5,7 +5,7 @@
 #include "../matrices/format/ellpack.h"
 
 
-void ELLPACKProduct(ellpack_matrix* mat, matrix* vector, matrix* result){
+void ellpack_product(ellpack_matrix* mat, matrix* vector, matrix* result){
 
     //int op = 0;
     for (int i = 0; i < result->m; i++) {
@@ -22,7 +22,7 @@ void ELLPACKProduct(ellpack_matrix* mat, matrix* vector, matrix* result){
     //printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix->M * vector->n * MAXNZ operazioni :)
 }
 
-void OmpELLPACKProduct(ellpack_matrix mat, matrix vector, matrix* result){
+void omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result){
 
     //int op = 0;
 
@@ -44,7 +44,7 @@ void OmpELLPACKProduct(ellpack_matrix mat, matrix vector, matrix* result){
     //printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix->M * vector->n * MAXNZ operazioni :)
 }
 
-void OptimizedELLPACKProduct(ellpack_matrix* mat, matrix* vector, matrix* result){
+void optimized_ellpack_product(ellpack_matrix* mat, matrix* vector, matrix* result){
 
     int op = 0;
     for (int i = 0; i < result->m; i++) {
@@ -77,18 +77,18 @@ matrix calcola_prodotto_seriale_ellpack(ellpack_matrix ellpackMatrix, matrix vec
     result.coeff = (double **) malloc(sizeof(double *) * result.m);
     if (opt == true) {
         clock_t begin = clock();
-        OptimizedELLPACKProduct(&ellpackMatrix, &vector, &result);
+        optimized_ellpack_product(&ellpackMatrix, &vector, &result);
         clock_t end = clock();
         printf("\tserial_opt time: %f\n", (double)(end - begin) / CLOCKS_PER_SEC);
     }
     else {
         clock_t begin = clock();
-        ELLPACKProduct(&ellpackMatrix, &vector, &result);
+        ellpack_product(&ellpackMatrix, &vector, &result);
         clock_t end = clock();
         printf("\tserial_noopt time: %f\n", (double)(end - begin) / CLOCKS_PER_SEC);
     }
 
-    //stampaMatrice(result);
+    //stampa_matrice(result);
     return result;
 }
 
@@ -105,10 +105,10 @@ matrix calcola_prodotto_omp_ellpack(ellpack_matrix ellpackMatrix, matrix vector,
     result.coeff = (double **) malloc(sizeof(double *) * result.m);
 
     clock_t begin = clock();
-    OmpELLPACKProduct(ellpackMatrix, vector, &result);
+    omp_ellpack_product(ellpackMatrix, vector, &result);
     clock_t end = clock();
     printf("\tomp time: %f\n", (double)(end - begin) / CLOCKS_PER_SEC);
-    //stampaMatrice(result);
+    //stampa_matrice(result);
     return result;
 }
 

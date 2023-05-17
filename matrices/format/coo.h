@@ -13,13 +13,13 @@ typedef struct{
     double*     values;     //Vettore dei valori
 } coo_matrix;
 
-void stampaMatriceCoo(coo_matrix mat){
+void stampa_matrice_coo(coo_matrix mat){
     for(int i = 0; i < mat.nz; i++){
             printf("%d %d %lf\n",mat.rows[i], mat.cols[i],mat.values[i]);
     }
 }
 
-matrix convertToSimpleMatrix(coo_matrix mat){
+matrix convert_to_simple_matrix(coo_matrix mat){
     matrix new_matrix;
     new_matrix.m = mat.m;
     new_matrix.n = mat.n;

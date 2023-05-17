@@ -65,11 +65,11 @@ void main(){
 
     for(int i = 0; i < NFILES; i++){
         printf("%s\n",matFiles[i]);
-        mat = getMatrix(matFiles[i]);
-        converted_csr_matrix = convertToCsrFromCoo(mat);
-        converted_ellpack_matrix = ConvertCOOToELLPACK(mat);
+        mat = get_matrix(matFiles[i]);
+        converted_csr_matrix = convert_to_csr_from_coo(mat);
+        converted_ellpack_matrix = convert_coo_to_ellpack(mat);
         for(int j = 0; j < 7; j++){
-            multivector = GenerateMultivector(mat.n,col_multivector[j]);
+            multivector = generate_multivector(mat.n, col_multivector[j]);
             //multivector_trasposto = genera_trasposta(multivector);
             result = prepara_risultato(converted_csr_matrix.m, multivector.n);
             for(int k = 0; k < NREPETITIONS; k++){
@@ -83,7 +83,7 @@ void main(){
                 end = clock();
                 timeSumCsrOmp += (double)(end - begin) / CLOCKS_PER_SEC;
                 begin = clock();
-                OmpELLPACKProduct(converted_ellpack_matrix, multivector, &result);
+                omp_ellpack_product(converted_ellpack_matrix, multivector, &result);
                 end = clock();
                 timeSumEllpackOmp += (double)(end - begin) / CLOCKS_PER_SEC;
             }
@@ -96,7 +96,7 @@ void main(){
         }
         free_matrix(&multivector);
         free_csr_matrix(&converted_csr_matrix);
-        FreeEllpackMatrix(&converted_ellpack_matrix);
+        free_ellpack_matrix(&converted_ellpack_matrix);
     }
     fclose(resultsSer);
     fclose(resultsCsrOmp);

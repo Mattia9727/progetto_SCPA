@@ -20,7 +20,7 @@ typedef struct{
     double**      coeff; //Vettore dei coefficienti
 } matrix;
 
-void stampaMatrice(matrix mat){
+void stampa_matrice(matrix mat){
     int m = mat.m;
     int n = mat.n;
     for (int i = 0; i < m; i++) {
@@ -31,7 +31,7 @@ void stampaMatrice(matrix mat){
     }
 }
 
-void stampaMatriceSuFile(char* filename, matrix mat){
+void stampa_matrice_su_file(char* filename, matrix mat){
     int m = mat.m;
     int n = mat.n;
     FILE *f = fopen(filename, "a");
@@ -45,7 +45,7 @@ void stampaMatriceSuFile(char* filename, matrix mat){
     fclose(f);
 }
 
-void stampaMatriceSparsa(sparse_matrix mat){
+void stampa_matrice_sparsa(sparse_matrix mat){
     int m = mat.m;
     int n = mat.n;
     for (int i = 0; i < m; i++) {
@@ -59,7 +59,7 @@ void stampaMatriceSparsa(sparse_matrix mat){
     }
 }
 
-sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
+sparse_matrix generate_sparse_matrix(int m, int n, int max_nz) {
     sparse_matrix new_matrix;
     new_matrix.m = m;
     new_matrix.n = n;
@@ -90,7 +90,7 @@ sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
         }
     }
     // Stampa della matrice
-    // stampaMatriceSparsa(new_matrix);
+    // stampa_matrice_sparsa(new_matrix);
 
     for(int i=0; i < m; i++) {
         for (int j = 0; j < n; j++) {
@@ -101,7 +101,7 @@ sparse_matrix GenerateSparseMatrix(int m, int n, int max_nz) {
     return new_matrix;
 }
 
-matrix GenerateMultivector(int m, int n) {
+matrix generate_multivector(int m, int n) {
     matrix new_multivector;
     new_multivector.m = m;
     new_multivector.n = n;
@@ -129,7 +129,7 @@ matrix GenerateMultivector(int m, int n) {
         }
     }
     // Stampa della matrice
-    //stampaMatrice(new_multivector);
+    //stampa_matrice(new_multivector);
 
     return new_multivector;
 }

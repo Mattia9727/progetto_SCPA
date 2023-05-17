@@ -18,7 +18,7 @@ typedef struct{
     int*        ja;     //Vettore degli indici di colonna
 } csr_matrix;
 
-void stampaMatriceCsr(csr_matrix mat){
+void stampa_matrice_csr(csr_matrix mat){
     printf("AS\n");
     for(int i = 0; i < mat.nz; i++){
         printf("%f",mat.as[i]);
@@ -37,7 +37,7 @@ void stampaMatriceCsr(csr_matrix mat){
     printf("\n");
 }
 
-csr_matrix convertToCsr(sparse_matrix mat){
+csr_matrix convert_to_csr(sparse_matrix mat){
     //Nuova matrice
     csr_matrix convertedMatrix;
     //Alloco i vettori
@@ -76,7 +76,7 @@ csr_matrix convertToCsr(sparse_matrix mat){
     
 }
 
-csr_matrix convertToCsrFromCoo(coo_matrix mat){
+csr_matrix convert_to_csr_from_coo(coo_matrix mat){
     csr_matrix convertedMatrix;
 
     // Preparo la nuova struttura
