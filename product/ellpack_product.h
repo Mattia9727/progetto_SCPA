@@ -23,9 +23,6 @@ void ELLPACKProduct(ellpack_matrix* mat, matrix* vector, matrix* result){
 }
 
 void OmpELLPACKProduct(ellpack_matrix mat, matrix vector, matrix* result){
-
-    //int op = 0;
-
     double t;
 
     int i;
@@ -36,80 +33,34 @@ void OmpELLPACKProduct(ellpack_matrix mat, matrix vector, matrix* result){
             t = 0;
             for (int j = 0; j < mat.maxnz; j++) {
                 t = t + mat.AS[i][j]*vector.coeff[mat.JA[i][j]][k];
-                //op++;
             }
             result->coeff[i][k] = t;
         }
     }
-    //printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix->M * vector->n * MAXNZ operazioni :)
 }
 
-void OptimizedELLPACKProduct(ellpack_matrix* mat, matrix* vector, matrix* result){
-
-    int op = 0;
-    for (int i = 0; i < result->m; i++) {
-        result->coeff[i] = (double *) calloc(result->n, sizeof(double));
+void OptimizedELLPACKProduct(ellpack_matrix mat, matrix vector, matrix* result){
+    double t = 0;
+    int i;
+    int prev_JA = -1;
+    int curr_JA;
+    #pragma omp parallel for schedule(static) shared(result, mat, vector) private(t,i,prev_JA, curr_JA)
+    for (i = 0; i < result->m; i++) {
         for (int k = 0; k < result->n; k++) {
-            double t = 0;
-            int prev_JA = -1;
-            for (int j = 0; j < mat->maxnz; j++) {
-                if (prev_JA>=mat->JA[i][j]) break;
-                prev_JA = mat->JA[i][j];
-                t = t + mat->AS[i][j]*vector->coeff[prev_JA][k];
-                op++;
+            prev_JA = -1;
+            t = 0;
+            for (int j = 0; j < mat.maxnz; j++) {
+                curr_JA = mat.JA[i][j];
+                if (prev_JA<curr_JA){
+                    prev_JA = curr_JA;
+                    t = t + mat.AS[i][j]*vector.coeff[curr_JA][k];
+                }else j = mat.maxnz;    
+                
             }
             result->coeff[i][k] = t;
         }
     }
-    printf("\n\nOperazioni effettuate: %d\n\n",op); //Esegue matrix->M * vector->n * MAXNZ operazioni :)
-}
 
-matrix calcola_prodotto_seriale_ellpack(ellpack_matrix ellpackMatrix, matrix vector, bool opt){
-
-    if(ellpackMatrix.n != vector.m){
-        printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
-        exit(1);
-    }
-
-    matrix result;
-    result.m = ellpackMatrix.m;
-    result.n = vector.n;
-    result.coeff = (double **) malloc(sizeof(double *) * result.m);
-    if (opt == true) {
-        clock_t begin = clock();
-        OptimizedELLPACKProduct(&ellpackMatrix, &vector, &result);
-        clock_t end = clock();
-        printf("\tserial_opt time: %f\n", (double)(end - begin) / CLOCKS_PER_SEC);
-    }
-    else {
-        clock_t begin = clock();
-        ELLPACKProduct(&ellpackMatrix, &vector, &result);
-        clock_t end = clock();
-        printf("\tserial_noopt time: %f\n", (double)(end - begin) / CLOCKS_PER_SEC);
-    }
-
-    //stampaMatrice(result);
-    return result;
-}
-
-matrix calcola_prodotto_omp_ellpack(ellpack_matrix ellpackMatrix, matrix vector, bool opt){
-
-    if(ellpackMatrix.n != vector.m){
-        printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
-        exit(1);
-    }
-
-    matrix result;
-    result.m = ellpackMatrix.m;
-    result.n = vector.n;
-    result.coeff = (double **) malloc(sizeof(double *) * result.m);
-
-    clock_t begin = clock();
-    OmpELLPACKProduct(ellpackMatrix, vector, &result);
-    clock_t end = clock();
-    printf("\tomp time: %f\n", (double)(end - begin) / CLOCKS_PER_SEC);
-    //stampaMatrice(result);
-    return result;
 }
 
 #endif

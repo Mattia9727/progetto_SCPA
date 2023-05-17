@@ -14,7 +14,7 @@ void main(){
     coo_matrix mat;
     csr_matrix converted_csr_matrix;
     ellpack_matrix converted_ellpack_matrix;
-    matrix multivector, result, multivector_trasposto, result2;
+    matrix multivector, result1, result2, result3;
     clock_t begin, end;
     double timeSumSer = 0.0, timeSumCsrOmp = 0.0, timeSumEllpackOmp = 0.0;
     int col_multivector[7] = {3,4,8,12,16,32,64}; 
@@ -70,20 +70,22 @@ void main(){
         converted_ellpack_matrix = ConvertCOOToELLPACK(mat);
         for(int j = 0; j < 7; j++){
             multivector = GenerateMultivector(mat.n,col_multivector[j]);
-            //multivector_trasposto = genera_trasposta(multivector);
-            result = prepara_risultato(converted_csr_matrix.m, multivector.n);
+            result1 = prepara_risultato(converted_csr_matrix.m, multivector.n);
+            result2 = prepara_risultato(converted_csr_matrix.m, multivector.n);
+            result3 = prepara_risultato(converted_csr_matrix.m, multivector.n);
             for(int k = 0; k < NREPETITIONS; k++){
                 begin = clock();
-                calcola_prodotto_seriale(converted_csr_matrix,multivector, &result);
+                calcola_prodotto_seriale(converted_csr_matrix,multivector, &result1);
                 end = clock();
                 timeSumSer += (double)(end - begin) / CLOCKS_PER_SEC;
 
                 begin = clock();
-                calcola_prodotto_per_righe_csr_openmp(converted_csr_matrix,multivector, &result);
+                OmpELLPACKProduct(converted_ellpack_matrix,multivector, &result2);
                 end = clock();
                 timeSumCsrOmp += (double)(end - begin) / CLOCKS_PER_SEC;
+
                 begin = clock();
-                OmpELLPACKProduct(converted_ellpack_matrix, multivector, &result);
+                OptimizedELLPACKProduct(converted_ellpack_matrix, multivector, &result3);
                 end = clock();
                 timeSumEllpackOmp += (double)(end - begin) / CLOCKS_PER_SEC;
             }
@@ -92,7 +94,9 @@ void main(){
             fprintf(resultsCsrOmp,"%s, %d, %d, %d, %d, %f, %f\n",matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumCsrOmp/NREPETITIONS,((2*col_multivector[j]/pow(10,6))*converted_csr_matrix.nz)/(timeSumCsrOmp/NREPETITIONS));
             fprintf(resultsEllpackOmp,"%s, %d, %d, %d, %d, %f, %f\n",matFiles[i],converted_ellpack_matrix.m, converted_ellpack_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumEllpackOmp/NREPETITIONS,((2*col_multivector[j]/pow(10,6))*converted_csr_matrix.nz)/(timeSumEllpackOmp/NREPETITIONS));
 
-            free_matrix(&result);
+            free_matrix(&result1);
+            free_matrix(&result2);
+            free_matrix(&result3);
         }
         free_matrix(&multivector);
         free_csr_matrix(&converted_csr_matrix);
