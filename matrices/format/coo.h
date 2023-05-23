@@ -23,7 +23,8 @@ matrix convert_to_simple_matrix(coo_matrix mat){
     matrix new_matrix;
     new_matrix.m = mat.m;
     new_matrix.n = mat.n;
-    new_matrix.coeff = (double **)malloc(sizeof(float*)*mat.m);
+    new_matrix.coeff = (double *)malloc(sizeof(double)*mat.m*mat.n);
+    /*
     for(int i = 0; i < mat.m; i++){
         new_matrix.coeff[i] = (double *) calloc(mat.n, sizeof(double));     // allocazione della memoria per la riga i-esima
         if (new_matrix.coeff[i] == NULL) {
@@ -31,12 +32,13 @@ matrix convert_to_simple_matrix(coo_matrix mat){
             exit(0);
         }
     }
+    */
     if (new_matrix.coeff == NULL) {
         printf("Errore di allocazione della memoria.\n");
         exit(0);
     }
     for(int i = 0; i < mat.nz; i++){
-        new_matrix.coeff[mat.rows[i]][mat.cols[i]] = (double)(mat.values[i]);
+        new_matrix.coeff[mat.rows[i] * mat.n + mat.cols[i]] = mat.values[i];
     }
     return new_matrix;
 }

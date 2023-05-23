@@ -92,6 +92,7 @@ csr_matrix convert_to_csr_from_coo(coo_matrix mat){
         exit(1);
     }
     convertedMatrix.irp = (int*)malloc((mat.m +1)*sizeof(int));
+    //convertedMatrix.irp = (int*)memalign(0x40,(mat.m +1)*sizeof(int));
     if(convertedMatrix.irp == NULL){
         exit(1);
     }
