@@ -1,11 +1,30 @@
-#ifndef _MATRIXRETRIEVERH_
-#define _MATRIXRETRIEVERH_
-
+#include <stdlib.h>
+#include "headers/coo.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "mmio.c"
-#include "format/coo.h"
+#include "../headers/mmio.h"
 
+void stampa_matrice_coo(coo_matrix mat){
+    for(int i = 0; i < mat.nz; i++){
+            printf("%d %d %lf\n",mat.rows[i], mat.cols[i],mat.values[i]);
+    }
+}
+
+matrix convert_to_simple_matrix(coo_matrix mat){
+    matrix new_matrix;
+    new_matrix.m = mat.m;
+    new_matrix.n = mat.n;
+    new_matrix.coeff = (double *)malloc(sizeof(double)*mat.m*mat.n);
+    
+    if (new_matrix.coeff == NULL) {
+        printf("Errore di allocazione della memoria.\n");
+        exit(0);
+    }
+    for(int i = 0; i < mat.nz; i++){
+        new_matrix.coeff[mat.rows[i] * mat.n + mat.cols[i]] = mat.values[i];
+    }
+    return new_matrix;
+}
 
 coo_matrix get_matrix(char* matrixFileName){
     MM_typecode matcode;
@@ -79,8 +98,3 @@ coo_matrix get_matrix(char* matrixFileName){
 
     return mat;
 }
-
-#endif
-
-
-

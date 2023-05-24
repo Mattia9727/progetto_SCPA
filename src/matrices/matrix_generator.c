@@ -1,24 +1,7 @@
-#ifndef _MATRIXGENERATORH_
-#define _MATRIXGENERATORH_
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-#define MAX_RANDOM_VALUE 10
-
-typedef struct{
-    int m;              //Numero righe matrice
-    int n;              //Numero colonne matrice
-    int nz;             //Numero di non zeri della matrice
-    double**      coeff; //Vettore dei coefficienti
-} sparse_matrix;
-
-typedef struct{
-    int m;              //Numero righe multivettore
-    int n;              //Numero colonne multivettore
-    double*      coeff; //Vettore dei coefficienti
-} matrix;
+#include "headers/matrix_generator.h"
 
 void stampa_matrice(matrix mat){
     int m = mat.m;
@@ -112,27 +95,14 @@ matrix generate_multivector(int m, int n) {
     }
 
     int i, j, k;
-    /*
-    // Allocazione della memoria per il doppio puntatore
-    new_multivector.coeff = (double **) malloc(sizeof(double *) * m);
-    if (new_multivector.coeff == NULL) {
-        printf("Errore di allocazione della memoria.\n");
-        exit(0);
-    }
-    */
+    
     // Generazione casuale dei valori della matrice
     srand(time(NULL));
     for (i = 0; i < m; i++) {
-        /*
-        new_multivector.coeff[i] = (double *) calloc(n, sizeof(double));     // allocazione della memoria per la riga i-esima
-        if (new_multivector.coeff[i] == NULL) {
-            printf("Errore di allocazione della memoria.\n");
-            exit(0);
-        }
-        */
+
         for (j = 0; j < n; j++) {
-            //new_multivector.coeff[i*n + j] = (double)rand()/(double)(RAND_MAX/MAX_RANDOM_VALUE);;     // valore casuale tra 1 e 10
-            new_multivector.coeff[i*n + j] = 1.0;       
+            new_multivector.coeff[i*n + j] = (double)rand()/(double)(RAND_MAX/MAX_RANDOM_VALUE);;     // valore casuale tra 1 e 10
+                   
         }
     }
     // Stampa della matrice
@@ -150,15 +120,6 @@ matrix genera_trasposta(matrix mat){
         printf("Errore di allocazione della memoria.\n");
         exit(0);
     }
-    /*
-    for(int i = 0; i < mTrasposta.m; i++){
-        mTrasposta.coeff[i] = (double *)malloc(sizeof(double*)*mTrasposta.n);
-        if (mTrasposta.coeff[i] == NULL) {
-            printf("Errore di allocazione della memoria.\n");
-            exit(0);
-        }
-    }
-    */
 
     for(int i = 0; i < mat.m; i++){
         for(int j = 0; j < mat.n; j++){
@@ -169,5 +130,3 @@ matrix genera_trasposta(matrix mat){
     return mTrasposta;
 
 }
-
-#endif

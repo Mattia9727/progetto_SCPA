@@ -1,22 +1,14 @@
-
-#ifndef _PRODUCTCSROPENMPH_
-#define _PRODUCTCSROPENMPH_ 
-
 #include <stdio.h>
 #include <omp.h>
-#include "product.h"
+#include "headers/product_csr_openmp.h"
 #include <time.h>
-
-#define NUM_THREADS 40
-
-
 double calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multivector,matrix* result){
-    /*
+    
     if(csrMatrix.n != multivector.m){
         printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
         exit(1);
     }
-    */
+    
     double partialSum;
 
     int i,j,k, irp_1,irp_2;
@@ -46,12 +38,12 @@ double calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multiv
 } 
 
 double calcola_prodotto_per_righe_csr_openmp_bis(csr_matrix csrMatrix, matrix multivector,matrix* result){
-    /*
+    
     if(csrMatrix.n != multivector.m){
         printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
         exit(1);
     }
-    */
+    
     int i,j,k, irp_1,irp_2,col;
     double elem;
     int m = csrMatrix.m,n=multivector.n;
@@ -74,36 +66,7 @@ double calcola_prodotto_per_righe_csr_openmp_bis(csr_matrix csrMatrix, matrix mu
     clock_gettime(CLOCK_MONOTONIC, &end);
     return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
 } 
-/*
-double calcola_prodotto_per_righe_csr_openmp_bis(csr_matrix csrMatrix, matrix multivector,matrix* result){
-    
-    if(csrMatrix.n != multivector.m){
-        printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
-        exit(1);
-    }
-    
-    double elem;
-    int col;
-    int i;
 
-    int chunckSize = ((int)((csrMatrix.m/(float)NUM_THREADS)/64))*64;
-    if(chunckSize < 64) chunckSize = 64;
-    clock_t begin, end;
-    begin = clock();
-    #pragma omp parallel for schedule(static,chunckSize) shared(result, multivector, csrMatrix) private(i,col,elem)
-    for(i = 0; i < csrMatrix.m; i++){
-        for(int j = csrMatrix.irp[i]; j < csrMatrix.irp[i+1]; j++){
-            elem = csrMatrix.as[j];
-            col = csrMatrix.ja[j];
-            for(int k = 0; k < multivector.n; k++){                
-                result->coeff[i][k] += elem*multivector.coeff[col][k];
-            }
-        }
-    }    
-    end = clock();
-    return (double)(end - begin) / CLOCKS_PER_SEC;
-}  
-*/
 double calcola_prodotto_per_righe_csr_openmp_trasposto(csr_matrix csrMatrix, matrix multivector_trasposto,matrix* result){
     if(csrMatrix.n != multivector_trasposto.n){
         printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
@@ -137,4 +100,3 @@ double calcola_prodotto_per_righe_csr_openmp_trasposto(csr_matrix csrMatrix, mat
     clock_gettime(CLOCK_MONOTONIC, &end);
     return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
 }
-#endif

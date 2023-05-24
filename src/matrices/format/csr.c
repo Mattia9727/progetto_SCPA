@@ -1,22 +1,8 @@
-#ifndef _CRSH_
-#define _CSRH_ 
-
-#include "../matrix_generator.h"
-#include "coo.h"
+#include "headers/csr.h"
 #include <malloc.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-
-typedef struct{
-    int m;              //Numero righe matrice
-    int n;              //Numero colonne matrice
-    int nz;             //Numero non zeri
-    int*        irp;    //Vettore dei puntatori all'inizio di ciascuna riga
-    double*      as;    //Vettore dei coefficienti
-    int*        ja;     //Vettore degli indici di colonna
-} csr_matrix;
 
 void stampa_matrice_csr(csr_matrix mat){
     printf("AS\n");
@@ -134,5 +120,3 @@ void free_csr_matrix(csr_matrix* matrix){
     free(matrix->as);
     free(matrix->ja);
 }
-
-#endif

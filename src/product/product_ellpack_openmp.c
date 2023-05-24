@@ -1,15 +1,8 @@
-#ifndef _ELLPACKPRODUCTH_
-#define _ELLPACKPRODUCTH_
-
 #include <stdbool.h>
-#include "../matrices/format/ellpack.h"
-
-#define NUM_THREADS 40
-
+#include "headers/product_ellpack_openmp.h"
+#include <time.h>
 
 void ellpack_product(ellpack_matrix* mat, matrix* vector, matrix* result){
-
-
     for (int i = 0; i < result->m; i++) {
         for (int k = 0; k < result->n; k++) {
             double t = 0;
@@ -74,6 +67,3 @@ double optimized_ellpack_product(ellpack_matrix mat, matrix vector, matrix* resu
     clock_gettime(CLOCK_MONOTONIC, &end);
     return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
 }
-
-
-#endif
