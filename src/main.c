@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include "product/headers/product_csr_openmp.h"
+#include "product/headers/product_csr.h"
 #include "product/headers/product_ellpack_openmp.h"
 
-#define NFILES 30
+#define NFILES 1
 #define NREPETITIONS 2
 #define FILEHEADER "MatrixName, NRows, NCol, NZ, k, time, GFLOPS\n"
 
@@ -87,6 +87,7 @@ int main(){
                 timeSumEllpackOmp += optimized_ellpack_product(converted_ellpack_matrix,multivector, &result1);
                 //printf("%d\n",k);
                 check_result(result1,result2);
+                calcola_prodotto_csr_cuda(converted_csr_matrix, multivector, &result1);
             }
 
             fprintf(resultsSer,"%s, %d, %d, %d, %d, %f, %f\n",matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumSer/NREPETITIONS,(converted_csr_matrix.nz/pow(10,9))*(2*col_multivector[j]/(timeSumSer/NREPETITIONS)));

@@ -45,14 +45,14 @@ $(binDir)/debug: $(objectsC) $(objectsCuda)
 	$(CC) $(OPENMP) $(LINK) $^ -o $@
 
 # compila tutti i sorgenti in src in un eseguibile ottimizzato per le prestazioni
-$(binDir)/release: $(src)
+$(srcDir)/main: $(src)
 	mkdir -p $(binDir)
 	$(CC) $(CPP) $(OPENMP) $(INCLUDES) $(FAST) -c $(srcC)
 	$(CC) $(CUDA) $(OPENMP) $(INCLUDES) $(FAST) -dc $(srcCuda)
 	$(CC) $(OPENMP) $(LINK) *.o -o $@
 	rm *.o
 
-all: bin/debug bin/release
+all: bin/debug src/main
 
 clean:
 	rm -rf $(objectsDir) $(binDir)

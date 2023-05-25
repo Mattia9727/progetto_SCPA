@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <omp.h>
-#include "headers/product_csr_openmp.h"
+#include "headers/product_csr.h"
 #include <time.h>
 double calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multivector,matrix* result){
     
