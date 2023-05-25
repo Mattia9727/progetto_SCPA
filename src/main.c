@@ -1,16 +1,15 @@
 #include <malloc.h>
 #include <stdlib.h>
-#include "product/product_csr_openmp.h"
-#include "product/ellpack_product.h"
 #include <time.h>
 #include <math.h>
-#include "matrices/format/ellpack.h"
+#include "product/headers/product_csr.h"
+#include "product/headers/product_ellpack_openmp.h"
 
-#define NFILES 30
+#define NFILES 1
 #define NREPETITIONS 2
 #define FILEHEADER "MatrixName, NRows, NCol, NZ, k, time, GFLOPS\n"
 
-void main(){
+int main(){
     coo_matrix mat;
     csr_matrix converted_csr_matrix;
     ellpack_matrix converted_ellpack_matrix;
@@ -19,44 +18,44 @@ void main(){
     double timeSumSer = 0.0, timeSumCsrOmp = 0.0, timeSumEllpackOmp = 0.0;
     int col_multivector[7] = {3,4,8,12,16,32,64};
 
-    FILE *resultsSer = fopen("measurements/results/serial.csv", "w+");
-    FILE *resultsCsrOmp = fopen("measurements/results/crsomp.csv", "w+");
-    FILE *resultsEllpackOmp = fopen("measurements/results/ellpackomp.csv", "w+");
+    FILE *resultsSer = fopen("../measurements/results/serial.csv", "w+");
+    FILE *resultsCsrOmp = fopen("../measurements/results/crsomp.csv", "w+");
+    FILE *resultsEllpackOmp = fopen("../measurements/results/ellpackomp.csv", "w+");
 
     if(resultsSer == NULL || resultsCsrOmp == NULL || resultsEllpackOmp == NULL)
         printf("errore apertura file\n");
 
     char* matFiles[] = {
-        "matrices/matrix_files/cage4.mtx",
-        "matrices/matrix_files/olm1000.mtx",
-        "matrices/matrix_files/west2021.mtx",
-        "matrices/matrix_files/mhda416.mtx",
-        "matrices/matrix_files/adder_dcop_32.mtx",
-        "matrices/matrix_files/mcfe.mtx",
-        "matrices/matrix_files/rdist2.mtx",
-        "matrices/matrix_files/cavity10.mtx",
-        "matrices/matrix_files/mhd4800a.mtx",
-        "matrices/matrix_files/bcsstk17.mtx",
-        "matrices/matrix_files/raefsky2.mtx",
-        "matrices/matrix_files/thermal1.mtx",
-        "matrices/matrix_files/af23560.mtx",
-        "matrices/matrix_files/thermomech_TK.mtx",
-        "matrices/matrix_files/olafu.mtx",
-        "matrices/matrix_files/FEM_3D_thermal1.mtx",
-        "matrices/matrix_files/lung2.mtx",
-        "matrices/matrix_files/dc1.mtx",
-        "matrices/matrix_files/amazon0302.mtx",
-        "matrices/matrix_files/roadNet-PA.mtx",
-        "matrices/matrix_files/cop20k_A.mtx",
-        "matrices/matrix_files/mac_econ_fwd500.mtx",
-        "matrices/matrix_files/cant.mtx",
-        "matrices/matrix_files/webbase-1M.mtx",
-        "matrices/matrix_files/thermal2.mtx",
-        "matrices/matrix_files/nlpkkt80.mtx",
-        "matrices/matrix_files/PR02R.mtx",
-        "matrices/matrix_files/af_1_k101.mtx",
-        "matrices/matrix_files/ML_Laplace.mtx",
-        "matrices/matrix_files/Cube_Coup_dt0.mtx",
+        "../measurements/matrix_files/cage4.mtx",
+        "../measurements/matrix_files/olm1000.mtx",
+        "../measurements/matrix_files/west2021.mtx",
+        "../measurements/matrix_files/mhda416.mtx",
+        "../measurements/matrix_files/adder_dcop_32.mtx",
+        "../measurements/matrix_files/mcfe.mtx",
+        "../measurements/matrix_files/rdist2.mtx",
+        "../measurements/matrix_files/cavity10.mtx",
+        "../measurements/matrix_files/mhd4800a.mtx",
+        "../measurements/matrix_files/bcsstk17.mtx",
+        "../measurements/matrix_files/raefsky2.mtx",
+        "../measurements/matrix_files/thermal1.mtx",
+        "../measurements/matrix_files/af23560.mtx",
+        "../measurements/matrix_files/thermomech_TK.mtx",
+        "../measurements/matrix_files/olafu.mtx",
+        "../measurements/matrix_files/FEM_3D_thermal1.mtx",
+        "../measurements/matrix_files/lung2.mtx",
+        "../measurements/matrix_files/dc1.mtx",
+        "../measurements/matrix_files/amazon0302.mtx",
+        "../measurements/matrix_files/roadNet-PA.mtx",
+        "../measurements/matrix_files/cop20k_A.mtx",
+        "../measurements/matrix_files/mac_econ_fwd500.mtx",
+        "../measurements/matrix_files/cant.mtx",
+        "../measurements/matrix_files/webbase-1M.mtx",
+        "../measurements/matrix_files/thermal2.mtx",
+        "../measurements/matrix_files/nlpkkt80.mtx",
+        "../measurements/matrix_files/PR02R.mtx",
+        "../measurements/matrix_files/af_1_k101.mtx",
+        "../measurements/matrix_files/ML_Laplace.mtx",
+        "../measurements/matrix_files/Cube_Coup_dt0.mtx",
     }; 
 
     fprintf(resultsSer,"%s",FILEHEADER);
@@ -88,6 +87,7 @@ void main(){
                 timeSumEllpackOmp += optimized_ellpack_product(converted_ellpack_matrix,multivector, &result1);
                 //printf("%d\n",k);
                 check_result(result1,result2);
+                calcola_prodotto_csr_cuda(converted_csr_matrix, multivector, &result1);
             }
 
             fprintf(resultsSer,"%s, %d, %d, %d, %d, %f, %f\n",matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumSer/NREPETITIONS,(converted_csr_matrix.nz/pow(10,9))*(2*col_multivector[j]/(timeSumSer/NREPETITIONS)));
@@ -105,5 +105,5 @@ void main(){
     fclose(resultsSer);
     fclose(resultsCsrOmp);
     fclose(resultsEllpackOmp);
-
+    return 0;
 }

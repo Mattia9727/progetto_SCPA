@@ -1,11 +1,5 @@
-#ifndef _PRODUCTH_
-#define _PRODUCTH_
-
-#include "../matrices/format/csr.h"
-#include "../matrices/matrix_generator.h"
 #include <time.h>
-
-#define ALPHA 1000
+#include "headers/product.h"
 
 void prepara_risultato(int m, int n, matrix* result){
     result->m = m;
@@ -16,25 +10,9 @@ void prepara_risultato(int m, int n, matrix* result){
         exit(1);
     }
     result->coeff = coeff;
-    /*
-    for(int i = 0; i < m; i++){
-        coeff[i] = (double*)calloc(n,sizeof(double));
-        if(coeff[i] == NULL){
-            printf("Errore malloc i\n");
-            exit(1);
-        }
-    }
-    
-    return result;
-    */
 }
 
 void free_matrix(matrix* result){
-    /*
-    for(int i = 0; i < result->m; i++){
-        free(result->coeff[i]);
-    }
-    */
     free(result->coeff);
 }
 
@@ -79,5 +57,3 @@ void check_result(matrix m1, matrix m2){
         }
     }
 }
-
-#endif

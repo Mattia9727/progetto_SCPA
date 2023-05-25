@@ -1,23 +1,8 @@
-#ifndef _ELLPACKH_
-#define _ELLPACKH_
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
-#include "../matrix_generator.h"
-#include "../matrix_retriever.h"
-
-#define ROWS 10
-#define COLS 10
-
-typedef struct {
-    int m;
-    int n;
-    int maxnz;
-    int* JA;
-    double* AS;
-} ellpack_matrix;
+#include "headers/ellpack.h"
 
 void print_ellpack_matrix(ellpack_matrix matrix){
     printf("M = %d, N = %d, MAXNZ = %d \n\n",matrix.m, matrix.n, matrix.maxnz);
@@ -100,5 +85,3 @@ void free_ellpack_matrix(ellpack_matrix* matrix){
     free(matrix->AS);
     free(matrix->JA);
 }
-
-#endif
