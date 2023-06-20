@@ -1,6 +1,8 @@
 #include <time.h>
 #include "headers/product.h"
 
+#define ALPHA 10000
+
 void prepara_risultato(int m, int n, matrix* result){
     result->m = m;
     result->n = n;
@@ -53,7 +55,11 @@ void check_result(matrix m1, matrix m2){
     for(int i = 0; i < m1.m; i++){
         for(int j = 0; j < m1.n; j++){
             if((int)(m1.coeff[i*m1.n + j]*ALPHA) != (int)(m2.coeff[i*m2.n +j]*ALPHA))
-                exit(-1);
+                {
+                    printf("%d %d\n",i,j);
+                    printf("%lf %lf\n",m1.coeff[i*m1.n + j],m2.coeff[i*m2.n + j]);
+                    exit(-1);
+                }
         }
     }
 }

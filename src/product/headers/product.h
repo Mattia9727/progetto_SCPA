@@ -1,7 +1,6 @@
 #ifndef _PRODUCTH_
 #define _PRODUCTH_
 #include "../../matrices/format/headers/csr.h"
-#define ALPHA 1000
 
 void prepara_risultato(int m, int n, matrix* result);
 
