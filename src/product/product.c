@@ -1,5 +1,8 @@
 #include <time.h>
 #include "headers/product.h"
+#include <math.h>
+
+#define ALPHA 1000
 
 void prepara_risultato(int m, int n, matrix* result){
     result->m = m;
@@ -49,11 +52,18 @@ double calcola_prodotto_seriale(csr_matrix csrMatrix, matrix vector, matrix* res
 
 }
 
-void check_result(matrix m1, matrix m2){
+double check_result(matrix m1, matrix m2){
+    double error = 0;
     for(int i = 0; i < m1.m; i++){
         for(int j = 0; j < m1.n; j++){
-            if((int)(m1.coeff[i*m1.n + j]*ALPHA) != (int)(m2.coeff[i*m2.n +j]*ALPHA))
+            if((int)(m1.coeff[i*m1.n + j]*ALPHA) != (int)(m2.coeff[i*m2.n +j]*ALPHA)){
+                printf("%d %d\n",i,j);
+                printf("%lf %lf\n",m1.coeff[i*m1.n + j],m2.coeff[i*m2.n + j]);
                 exit(-1);
+            }else{
+                error += (abs(m1.coeff[i*m1.n + j]-m2.coeff[i*m2.n +j])*1000000000000000)/abs(m1.coeff[i*m1.n + j]);
+            }
         }
     }
+    return error/(m1.m*m1.n);
 }
