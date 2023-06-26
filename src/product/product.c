@@ -1,7 +1,9 @@
 #include <time.h>
 #include "headers/product.h"
 #include <cuda_runtime.h>  // For CUDA runtime API
+#include <math.h>
 
+#define ALPHA 1000
 
 void prepara_risultato(int m, int n, matrix* result){
     result->m = m;
@@ -65,14 +67,18 @@ double calcola_prodotto_seriale(csr_matrix csrMatrix, matrix vector, matrix* res
 
 }
 
-int check_result(matrix m1, matrix m2){
+double check_result(matrix m1, matrix m2){
+    double error = 0;
     for(int i = 0; i < m1.m; i++){
         for(int j = 0; j < m1.n; j++){
-            if((int)(m1.coeff[i*m1.n + j]*ALPHA) < (int)(m2.coeff[i*m2.n +j]*ALPHA-1) || (int)(m1.coeff[i*m1.n + j]*ALPHA) > (int)(m2.coeff[i*m2.n +j]*ALPHA+1)){
-                printf("NO, valore sbagliato a x=%d, y=%d\n",i,j);
-                return -1;
+            if((int)(m1.coeff[i*m1.n + j]*ALPHA) != (int)(m2.coeff[i*m2.n +j]*ALPHA)){
+                printf("%d %d\n",i,j);
+                printf("%lf %lf\n",m1.coeff[i*m1.n + j],m2.coeff[i*m2.n + j]);
+                exit(-1);
+            }else{
+                error += (abs(m1.coeff[i*m1.n + j]-m2.coeff[i*m2.n +j])*1000000000000000)/abs(m1.coeff[i*m1.n + j]);
             }
         }
     }
-    return 0;
+    return error/(m1.m*m1.n);
 }
