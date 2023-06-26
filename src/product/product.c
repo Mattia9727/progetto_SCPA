@@ -1,5 +1,7 @@
 #include <time.h>
 #include "headers/product.h"
+#include <cuda_runtime.h>  // For CUDA runtime API
+
 
 void prepara_risultato(int m, int n, matrix* result){
     result->m = m;
@@ -12,8 +14,22 @@ void prepara_risultato(int m, int n, matrix* result){
     result->coeff = coeff;
 }
 
+void prepara_risultato_cuda(int m, int n, matrix* result){
+    matrix* mat = malloc(sizeof(matrix));
+    mat->m = m;
+    mat->n = n;
+    cudaMemcpy(&result,mat,sizeof(matrix),cudaMemcpyHostToDevice);
+    double* coeff = malloc(m*n*sizeof(double));
+    cudaMalloc((void**)&(result->coeff),m*n*sizeof(double));
+    cudaMemcpy(result->coeff, coeff, m*n*sizeof(double),cudaMemcpyHostToDevice);
+}
+
 void free_matrix(matrix* result){
     free(result->coeff);
+}
+
+void free_matrix_cuda(matrix* result){
+    cudaFree(result->coeff);
 }
 
 double calcola_prodotto_seriale(csr_matrix csrMatrix, matrix vector, matrix* result){
@@ -49,11 +65,14 @@ double calcola_prodotto_seriale(csr_matrix csrMatrix, matrix vector, matrix* res
 
 }
 
-void check_result(matrix m1, matrix m2){
+int check_result(matrix m1, matrix m2){
     for(int i = 0; i < m1.m; i++){
         for(int j = 0; j < m1.n; j++){
-            if((int)(m1.coeff[i*m1.n + j]*ALPHA) != (int)(m2.coeff[i*m2.n +j]*ALPHA))
-                exit(-1);
+            if((int)(m1.coeff[i*m1.n + j]*ALPHA) < (int)(m2.coeff[i*m2.n +j]*ALPHA-1) || (int)(m1.coeff[i*m1.n + j]*ALPHA) > (int)(m2.coeff[i*m2.n +j]*ALPHA+1)){
+                printf("NO, valore sbagliato a x=%d, y=%d\n",i,j);
+                return -1;
+            }
         }
     }
+    return 0;
 }

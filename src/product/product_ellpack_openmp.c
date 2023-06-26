@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "headers/product_ellpack_openmp.h"
+#include "headers/product_ellpack.h"
 #include <time.h>
 
 void ellpack_product(ellpack_matrix* mat, matrix* vector, matrix* result){
@@ -38,7 +38,7 @@ double omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result){
     return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
 }
 
-double optimized_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result){
+double optimized_omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result){
     double t = 0;
     int i,j,k;
     unsigned long maxnz= mat.maxnz, m = result->m, n= result->n;
@@ -59,7 +59,7 @@ double optimized_ellpack_product(ellpack_matrix mat, matrix vector, matrix* resu
                     prev_JA = curr_JA;
                     t = t + mat.AS[i*maxnz+j]*vector.coeff[curr_JA*n+k];
                 }else j = mat.maxnz;
-
+            
             }
             result->coeff[i*n+k] = t;
         }

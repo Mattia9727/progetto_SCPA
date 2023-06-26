@@ -18,4 +18,7 @@ matrix convert_to_simple_matrix(coo_matrix mat);
 
 coo_matrix get_matrix(char* matrixFileName);
 
+
+void free_coo_matrix(coo_matrix* matrix);
+
 #endif
