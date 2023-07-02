@@ -15,13 +15,14 @@ typedef struct {
 } ellpack_matrix;
 
 typedef struct {
-    int m;
-    int n;
-    int hackSize;
-    int numMatrix;
-    int* hackOffsets;
-    int* maxnz;
-    int* JA;
+    long m;
+    long n;
+    long hackSize;
+    long numMatrix;
+    long matDim;
+    long* hackOffsets;
+    long* maxnz;
+    long* JA;
     double* AS;
 } h_ellpack_matrix;
 
