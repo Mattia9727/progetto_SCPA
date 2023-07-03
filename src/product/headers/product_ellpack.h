@@ -3,11 +3,9 @@
 
 #include "../../matrices/format/headers/ellpack.h"
 
-#define NUM_THREADS 40
-
 //product_ellpack_omp.c
 void ellpack_product(ellpack_matrix* mat, matrix* vector, matrix* result);
-double omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result);
+double omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, int nThreads);
 double optimized_omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, int nThreads);
 
 //product_ellpack_gpu.c

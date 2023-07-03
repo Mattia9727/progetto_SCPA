@@ -99,12 +99,10 @@ int main(){
                 free_matrix(&result_par);
 
                 prepara_risultato(converted_csr_matrix.m, multivector.n,&result_par);
-                timeSumEllpackCuda += optimized_cuda_h_ellpack_product_in(converted_h_ellpack_matrix, multivector, &result_par);
+                timeSumEllpackCuda += optimized_cuda_h_ellpack_product_in(converted_h_ellpack_matrix, multivector_T, &result_par);
                 errorEllpackCuda += check_result(result_ser,result_par);
                 free_matrix(&result_par);
             }
-            free_matrix(&result_ser);
-            free_matrix(&result_par);
             //free_coo_matrix(&mat);
 
             for(int t = 1; t < MAX_N_THREADS; t++){

@@ -9,10 +9,6 @@
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
 
-
-#define NUM_THREADS 40
-
-
 #define min(a,b)             \
 ({                           \
     __typeof__ (a) _a = (a); \

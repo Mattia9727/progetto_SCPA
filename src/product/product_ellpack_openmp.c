@@ -14,13 +14,13 @@ void ellpack_product(ellpack_matrix* mat, matrix* vector, matrix* result){
     }
 }
 
-double omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result){
+double omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, int nThreads){
     double t;
 
     int i,j,k;
     unsigned long maxnz= mat.maxnz, m = result->m, n= result->n;
     struct timespec start, end;
-    int chunkSize = ((int)((mat.m/(float)NUM_THREADS)/16))*16;
+    int chunkSize = ((int)((mat.m/(float)nThreads)/16))*16;
     if(chunkSize <= 0) chunkSize = 16;
     clock_gettime(CLOCK_MONOTONIC, &start);
     #pragma omp parallel for schedule(static,chunkSize) shared(result, mat, vector) firstprivate(m,n,maxnz) private(t,i,j,k)
