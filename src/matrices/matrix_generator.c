@@ -12,6 +12,7 @@ void stampa_matrice(matrix mat){
         }
         printf("\n");
     }
+    printf("\n");
 }
 
 void stampa_matrice_su_file(char* filename, matrix mat){

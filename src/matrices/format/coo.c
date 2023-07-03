@@ -14,10 +14,10 @@ matrix convert_to_simple_matrix(coo_matrix mat){
     matrix new_matrix;
     new_matrix.m = mat.m;
     new_matrix.n = mat.n;
-    new_matrix.coeff = (double *)malloc(sizeof(double)*mat.m*mat.n);
+    new_matrix.coeff = (double *)calloc(mat.m*mat.n,sizeof(double));
     
     if (new_matrix.coeff == NULL) {
-        printf("Errore di allocazione della memoria.\n");
+        printf("Errore di allocazione della memoria5.\n");
         exit(0);
     }
     for(int i = 0; i < mat.nz; i++){
@@ -97,4 +97,10 @@ coo_matrix get_matrix(char* matrixFileName){
     }
 
     return mat;
+}
+
+void free_coo_matrix(coo_matrix* matrix){
+    free(matrix->rows);
+    free(matrix->cols);
+    free(matrix->values);
 }

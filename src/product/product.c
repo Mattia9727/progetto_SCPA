@@ -1,5 +1,6 @@
 #include <time.h>
 #include "headers/product.h"
+#include <cuda_runtime.h>  // For CUDA runtime API
 #include <math.h>
 
 #define ALPHA 1000
@@ -15,8 +16,22 @@ void prepara_risultato(int m, int n, matrix* result){
     result->coeff = coeff;
 }
 
+void prepara_risultato_cuda(int m, int n, matrix* result){
+    matrix* mat = malloc(sizeof(matrix));
+    mat->m = m;
+    mat->n = n;
+    cudaMemcpy(&result,mat,sizeof(matrix),cudaMemcpyHostToDevice);
+    double* coeff = malloc(m*n*sizeof(double));
+    cudaMalloc((void**)&(result->coeff),m*n*sizeof(double));
+    cudaMemcpy(result->coeff, coeff, m*n*sizeof(double),cudaMemcpyHostToDevice);
+}
+
 void free_matrix(matrix* result){
     free(result->coeff);
+}
+
+void free_matrix_cuda(matrix* result){
+    cudaFree(result->coeff);
 }
 
 double calcola_prodotto_seriale(csr_matrix csrMatrix, matrix vector, matrix* result){
