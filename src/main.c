@@ -79,7 +79,8 @@ int main(){
         converted_csr_matrix = convert_to_csr_from_coo(mat);
         converted_ellpack_matrix = convert_coo_to_ellpack(mat);
         converted_h_ellpack_matrix = convert_coo_to_h_ellpack(mat);
-
+        if(converted_h_ellpack_matrix.numMatrix > 65536) printf("ops\n");
+        
         for(int j = 0; j < 7; j++){
             multivector = generate_multivector(mat.n, col_multivector[j]);
             multivector_T = genera_trasposta(multivector);
@@ -87,6 +88,7 @@ int main(){
             prepara_risultato(converted_csr_matrix.m, multivector.n, &result_par);
             timeSumSer = 0.0;
             timeSumCsrCuda = 0.0;
+            timeSumEllpackCuda = 0.0;
             errorCsrCuda = 0;
             errorEllpackCuda = 0;
             
@@ -99,7 +101,7 @@ int main(){
                 free_matrix(&result_par);
 
                 prepara_risultato(converted_csr_matrix.m, multivector.n,&result_par);
-                timeSumEllpackCuda += optimized_cuda_h_ellpack_product_in(converted_h_ellpack_matrix, multivector_T, &result_par);
+                timeSumEllpackCuda += optimized_cuda_h_ellpack_product_in(converted_h_ellpack_matrix, multivector, &result_par);
                 errorEllpackCuda += check_result(result_ser,result_par);
                 free_matrix(&result_par);
             }
@@ -127,10 +129,11 @@ int main(){
 
             fprintf(resultsSer,"%d, %s, %d, %d, %d, %d, %f, %f, %f\n",1, matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumSer/NREPETITIONS,0,(converted_csr_matrix.nz/pow(10,9))*(2*col_multivector[j]/(timeSumSer/NREPETITIONS)));
             fprintf(resultsCsrCuda,"%d, %s, %d, %d, %d, %d, %f, %f, %f\n",0,matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumCsrCuda/NREPETITIONS,errorCsrCuda/NREPETITIONS,((2*col_multivector[j]/pow(10,9))*converted_csr_matrix.nz)/(timeSumCsrCuda/NREPETITIONS));
-            fprintf(resultsEllpackCuda,"%d, %s, %d, %d, %d, %d, %f, %f, %f\n",0,matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumEllpackCuda/NREPETITIONS,errorEllpackCuda/NREPETITIONS,((2*col_multivector[j]/pow(10,9))*converted_csr_matrix.nz)/(timeSumCsrCuda/NREPETITIONS));
+            fprintf(resultsEllpackCuda,"%d, %s, %d, %d, %d, %d, %f, %f, %f\n",0,matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumEllpackCuda/NREPETITIONS,errorEllpackCuda/NREPETITIONS,((2*col_multivector[j]/pow(10,9))*converted_csr_matrix.nz)/(timeSumEllpackCuda/NREPETITIONS));
             free_matrix(&result_ser);
             
         }
+        
         free_coo_matrix(&mat);
         free_h_ellpack_matrix(&converted_h_ellpack_matrix);
         free_matrix(&multivector);
