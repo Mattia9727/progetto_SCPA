@@ -9,6 +9,8 @@
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
 
+#define MAX_GRID_SIZE 65536
+#define WARP_SIZE 32
 #define min(a,b)             \
 ({                           \
     __typeof__ (a) _a = (a); \
@@ -123,7 +125,7 @@ __global__ void optimized_cuda_ellpack_product(int m, int n, int maxnz, double* 
 
 
 __global__ void optimized_cuda_h_ellpack_product(int m, int n, long* maxnz, double* AS, long* JA, long* hackOffsets, long hackSize, long numMatrix, long matDim, double* coeff, double* myRes){
-
+    printf("ciao belli\n");
     long idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx <= m*n){
         long AS_JA_row = idx/n;                     //Indice di riga della matrice risultante (con cui mi scorro AS e JA)
@@ -144,6 +146,49 @@ __global__ void optimized_cuda_h_ellpack_product(int m, int n, long* maxnz, doub
         myRes[AS_JA_row * n + multiv_col] = res;
 
     }
+}
+__device__ double warp_reduce_2(double val){
+    for(int offset=warpSize/2; offset>0; offset/=2){
+        val += __shfl_down_sync(0xffffffff,val, offset);
+    }
+    return val;
+}
+
+__global__ void optimized_cuda_h_ellpack_product_2(int m, int nCols, long* maxnz, double* AS, long* JA, long* hackOffsets, long hackSize, long numMatrix, long matDim, double* multivector, double* myRes){
+    printf("ciao belli\n");
+   int idxBlock = blockIdx.x; // Indice del blocco che determina la sottomatrice da fare
+   int warpId = threadIdx.y; //Indice del warp
+   int tid = threadIdx.x; //Indice del thread nel warp
+   long start,end;
+   double val;
+   int col;
+   double sum[2048] = {0};
+   printf("%d\n",warpId);
+   for(int subMat = idxBlock; subMat < numMatrix; subMat += MAX_GRID_SIZE){
+    // Devo identificare la sottomatrice
+    start = hackOffsets[subMat];
+    end = hackOffsets[subMat+1];
+    if(warpId == 0 && tid == 0) printf("%d %d\n",start,end);
+    //if(m - idxBlock*hackSize - warpId > 0){
+        for(int idx = start + warpId*maxnz[idxBlock]; idx < start + (warpId+1)*maxnz[idxBlock]; idx +=WARP_SIZE){
+            val = AS[hackOffsets[idxBlock]+warpId*maxnz[idxBlock] + idx];
+            col = JA[hackOffsets[idxBlock]+idxBlock*warpId*maxnz[idxBlock] + idx];
+            for(int col_m = 0; col_m < nCols; col_m++){
+                sum[warpId*nCols + col_m] += val * multivector[col*nCols + col_m];
+                if(warpId == 0 && col_m == 0) printf("%f\n",val * multivector[col*nCols + col_m]);
+            }
+        }
+    //}
+    for(int j = 0; j < nCols; j++){
+        sum[warpId*nCols +j] = warp_reduce_2(sum[warpId*nCols +j]);
+        if(tid == 0){
+            myRes[(idxBlock*hackSize + warpId)*nCols+j] = sum[warpId*nCols +j];
+        }
+    }
+    
+
+   }
+
 }
 
 
@@ -218,34 +263,33 @@ double optimized_cuda_h_ellpack_product_in(h_ellpack_matrix host_mat, matrix vec
 
     double* cuda_result;
     checkCudaErrors(cudaMalloc((void**)&cuda_result, sizeof(double) * result->m * result->n));
-    double* myRes = (double *)malloc(sizeof(double)*result->m*result->n);
-
+    
     int blockX = int(((1024/vector.m)/32)*32), blockY = vector.m;  //gestione warp. Ogni blocco gestisce un numero di righe pari a blockX
     if (blockX==0) blockX++;
     int gridX = int(host_mat.m/blockX)+1;
 
     //printf("blockx=%d, blocky=%d, gridx=%d\n", blockX, blockY, gridX);
 
-    dim3 gridSize(gridX);
-    dim3 blockSize(blockX*blockY);    
-    
-    //dim3 gridSize(4);               //NUMERO DI BLOCCHI IN UNA GRID
-    //dim3 blockSize(256);            //NUMERO DI THREAD IN UN BLOCCO
+    //dim3 gridSize(gridX);
+    //dim3 blockSize(blockX*blockY);    
+    printf("%d\n",host_mat.numMatrix);
+    dim3 gridSize(host_mat.numMatrix);               //NUMERO DI BLOCCHI IN UNA GRID
+    dim3 blockSize(1024);            //NUMERO DI THREAD IN UN BLOCCO
 
     float time;
     cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    cudaEventRecord(start, 0);// 0 - the default stream
-    optimized_cuda_h_ellpack_product<<<gridSize,blockSize>>>(result->m, result->n, maxnz, AS, JA, hackOffsets, host_mat.hackSize, host_mat.numMatrix, host_mat.matDim, coeff, cuda_result);
-    cudaDeviceSynchronize();
-    cudaEventRecord(stop, 0);// 0 - the default stream
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time, start, stop);
+    checkCudaErrors(cudaEventCreate(&start));
+    checkCudaErrors(cudaEventCreate(&stop));
+    checkCudaErrors(cudaEventRecord(start, 0));// 0 - the default stream
+    optimized_cuda_h_ellpack_product_2<<<gridSize,blockSize>>>(result->m, result->n, maxnz, AS, JA, hackOffsets, host_mat.hackSize, host_mat.numMatrix, host_mat.matDim, coeff, cuda_result);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+    checkCudaErrors(cudaEventRecord(stop, 0));// 0 - the default stream
+    checkCudaErrors(cudaEventSynchronize(stop));
+    checkCudaErrors(cudaEventElapsedTime(&time, start, stop));
     printf("time: %f\n\n",time);
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
-    result->coeff = myRes;
+    checkCudaErrors(cudaEventDestroy(start));
+    checkCudaErrors(cudaEventDestroy(stop));
     checkCudaErrors(cudaFree(JA));
     checkCudaErrors(cudaFree(AS));
     checkCudaErrors(cudaFree(coeff));

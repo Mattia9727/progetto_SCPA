@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>  // For CUDA runtime API
 #include <math.h>
 
-#define ALPHA 1000
+#define ALPHA 100
 
 void prepara_risultato(int m, int n, matrix* result){
     result->m = m;
