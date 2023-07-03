@@ -38,17 +38,18 @@ double omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result){
     return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
 }
 
-double optimized_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result){
+double optimized_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, int nThreads){
     double t = 0;
     int i,j,k;
     unsigned long maxnz= mat.maxnz, m = result->m, n= result->n;
     int prev_JA = -1;
     int curr_JA;
     struct timespec start, end;
-    int chunkSize = ((int)((mat.m/(float)NUM_THREADS)/16))*16;
+    int chunkSize = ((int)((mat.m/(float)nThreads)/16))*16;
     if(chunkSize == 0) chunkSize = 16;
+    
     clock_gettime(CLOCK_MONOTONIC, &start);
-    #pragma omp parallel for schedule(static,chunkSize) shared(result, mat, vector) firstprivate(m,n,maxnz) private(t,i,j,k,prev_JA, curr_JA)
+    #pragma omp parallel for schedule(static,chunkSize) num_threads(nThreads) shared(result, mat, vector) firstprivate(m,n,maxnz) private(t,i,j,k,prev_JA, curr_JA)
     for (i = 0; i < m; i++) {
         for (int k = 0; k < n; k++) {
             prev_JA = -1;

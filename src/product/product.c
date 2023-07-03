@@ -61,7 +61,7 @@ double check_result(matrix m1, matrix m2){
                 printf("%lf %lf\n",m1.coeff[i*m1.n + j],m2.coeff[i*m2.n + j]);
                 exit(-1);
             }else{
-                error += (abs(m1.coeff[i*m1.n + j]-m2.coeff[i*m2.n +j])*1000000000000000)/abs(m1.coeff[i*m1.n + j]);
+                error += (abs(m1.coeff[i*m1.n + j]-m2.coeff[i*m2.n +j])*pow(10,18))/abs(m1.coeff[i*m1.n + j]);
             }
         }
     }

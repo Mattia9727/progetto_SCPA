@@ -2,7 +2,7 @@
 #include <omp.h>
 #include "headers/product_csr.h"
 #include <time.h>
-double calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multivector,matrix* result){
+double calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multivector,matrix* result, int nThreads){
     
     if(csrMatrix.n != multivector.m){
         printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
@@ -14,10 +14,11 @@ double calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multiv
     int i,j,k, irp_1,irp_2;
     int m = csrMatrix.m,n=multivector.n;
     struct timespec start, end;
-    int chunkSize = ((int)((csrMatrix.m/(float)NUM_THREADS)/16))*16;
+    int chunkSize = ((int)((csrMatrix.m/(float)nThreads)/16))*16;
     if(chunkSize < 16) chunkSize = 16;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    #pragma omp parallel for schedule(static,chunkSize) firstprivate(n,m) private(partialSum,i,j,k, irp_1, irp_2)
+    
+    #pragma omp parallel for schedule(static,chunkSize) num_threads(nThreads) firstprivate(n,m) private(partialSum,i,j,k, irp_1, irp_2)
     for(i = 0; i < m; i++){
         irp_1 = csrMatrix.irp[i];
         irp_2 = csrMatrix.irp[i+1];
@@ -37,7 +38,7 @@ double calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multiv
     return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
 } 
 
-double calcola_prodotto_per_righe_csr_openmp_bis(csr_matrix csrMatrix, matrix multivector,matrix* result){
+double calcola_prodotto_per_righe_csr_openmp_bis(csr_matrix csrMatrix, matrix multivector,matrix* result, int nThreads){
     
     if(csrMatrix.n != multivector.m){
         printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
@@ -48,10 +49,10 @@ double calcola_prodotto_per_righe_csr_openmp_bis(csr_matrix csrMatrix, matrix mu
     double elem;
     int m = csrMatrix.m,n=multivector.n;
     struct timespec start, end;
-    int chunkSize = ((int)((csrMatrix.m/(float)NUM_THREADS)/16))*16;
+    int chunkSize = ((int)((csrMatrix.m/(float)nThreads)/16))*16;
     if(chunkSize < 16) chunkSize = 16;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    #pragma omp parallel for schedule(static,chunkSize) firstprivate(n,m) private(elem, col,i,j,k, irp_1, irp_2)
+    #pragma omp parallel for schedule(static,chunkSize) num_threads(nThreads) firstprivate(n,m) private(elem, col,i,j,k, irp_1, irp_2)
     for(i = 0; i < m; i++){
         irp_1 = csrMatrix.irp[i];
         irp_2 = csrMatrix.irp[i+1];
@@ -67,7 +68,7 @@ double calcola_prodotto_per_righe_csr_openmp_bis(csr_matrix csrMatrix, matrix mu
     return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
 } 
 
-double calcola_prodotto_per_righe_csr_openmp_trasposto(csr_matrix csrMatrix, matrix multivector_trasposto,matrix* result){
+double calcola_prodotto_per_righe_csr_openmp_trasposto(csr_matrix csrMatrix, matrix multivector_trasposto,matrix* result, int nThreads){
     if(csrMatrix.n != multivector_trasposto.n){
         printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
         exit(1);
@@ -79,12 +80,11 @@ double calcola_prodotto_per_righe_csr_openmp_trasposto(csr_matrix csrMatrix, mat
     int mat_m = csrMatrix.m,vec_n=multivector_trasposto.n, vec_m = multivector_trasposto.m;
     struct timespec start, end;
     
-    int chunkSize = ((int)((csrMatrix.m/(float)NUM_THREADS)/16))*16;
+    int chunkSize = ((int)((csrMatrix.m/(float)nThreads)/16))*16;
     if(chunkSize < 16) chunkSize = 16;
-    
     clock_gettime(CLOCK_MONOTONIC, &start);
     
-    #pragma omp parallel for schedule(static,chunkSize) firstprivate(vec_n,vec_m, mat_m) private(partialSum,i,j,k, irp_1, irp_2)
+    #pragma omp parallel for schedule(static,chunkSize) num_threads(nThreads) firstprivate(vec_n,vec_m, mat_m) private(partialSum,i,j,k, irp_1, irp_2)
     for(i = 0; i < mat_m; i++){
         irp_1 = csrMatrix.irp[i];
         irp_2 = csrMatrix.irp[i+1];
