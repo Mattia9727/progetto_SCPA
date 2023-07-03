@@ -99,7 +99,7 @@ int main(){
                 timeSumCsrCuda += calcola_prodotto_csr_cuda(converted_csr_matrix, multivector, &result_par);
                 errorCsrCuda += check_result(result_ser,result_par);
                 free_matrix(&result_par);
-
+                printf("csr cuda fatto\n");
                 prepara_risultato(converted_csr_matrix.m, multivector.n,&result_par);
                 timeSumEllpackCuda += optimized_cuda_h_ellpack_product_in(converted_h_ellpack_matrix, multivector, &result_par);
                 errorEllpackCuda += check_result(result_ser,result_par);

@@ -154,39 +154,34 @@ __device__ double warp_reduce_2(double val){
     return val;
 }
 
-__global__ void optimized_cuda_h_ellpack_product_2(int m, int nCols, long* maxnz, double* AS, long* JA, long* hackOffsets, long hackSize, long numMatrix, long matDim, double* multivector, double* myRes){
-    printf("ciao belli\n");
-   int idxBlock = blockIdx.x; // Indice del blocco che determina la sottomatrice da fare
-   int warpId = threadIdx.y; //Indice del warp
-   int tid = threadIdx.x; //Indice del thread nel warp
+__global__ void optimized_cuda_h_ellpack_product_bis(int m, int nCols, long* maxnz, double* AS, long* JA, long* hackOffsets, int hackSize, long numMatrix, double* multivector, double* myRes){
+   long idxBlock = blockIdx.x; // Indice del blocco che determina la sottomatrice da fare
+   long warpId = threadIdx.y; //Indice del warp
+   long tid = threadIdx.x; //Indice del thread nel warp
    long start,end;
    double val;
-   int col;
+   long col;
    double sum[2048] = {0};
-   printf("%d\n",warpId);
    for(int subMat = idxBlock; subMat < numMatrix; subMat += MAX_GRID_SIZE){
     // Devo identificare la sottomatrice
     start = hackOffsets[subMat];
     end = hackOffsets[subMat+1];
-    if(warpId == 0 && tid == 0) printf("%d %d\n",start,end);
     //if(m - idxBlock*hackSize - warpId > 0){
         for(int idx = start + warpId*maxnz[idxBlock]; idx < start + (warpId+1)*maxnz[idxBlock]; idx +=WARP_SIZE){
             val = AS[hackOffsets[idxBlock]+warpId*maxnz[idxBlock] + idx];
             col = JA[hackOffsets[idxBlock]+idxBlock*warpId*maxnz[idxBlock] + idx];
             for(int col_m = 0; col_m < nCols; col_m++){
                 sum[warpId*nCols + col_m] += val * multivector[col*nCols + col_m];
-                if(warpId == 0 && col_m == 0) printf("%f\n",val * multivector[col*nCols + col_m]);
             }
         }
     //}
     for(int j = 0; j < nCols; j++){
         sum[warpId*nCols +j] = warp_reduce_2(sum[warpId*nCols +j]);
         if(tid == 0){
-            myRes[(idxBlock*hackSize + warpId)*nCols+j] = sum[warpId*nCols +j];
+            myRes[(idxBlock*blockDim.x + warpId)*nCols+j] = sum[warpId*nCols +j];
+            sum[warpId*nCols +j] = 0;
         }
     }
-    
-
    }
 
 }
@@ -273,15 +268,15 @@ double optimized_cuda_h_ellpack_product_in(h_ellpack_matrix host_mat, matrix vec
     //dim3 gridSize(gridX);
     //dim3 blockSize(blockX*blockY);    
     printf("%d\n",host_mat.numMatrix);
-    dim3 gridSize(host_mat.numMatrix);               //NUMERO DI BLOCCHI IN UNA GRID
-    dim3 blockSize(1024);            //NUMERO DI THREAD IN UN BLOCCO
+    dim3 gridSize((int)host_mat.numMatrix);               //NUMERO DI BLOCCHI IN UNA GRID
+    dim3 blockSize(32,32);          //NUMERO DI THREAD IN UN BLOCCO
 
     float time;
     cudaEvent_t start, stop;
     checkCudaErrors(cudaEventCreate(&start));
     checkCudaErrors(cudaEventCreate(&stop));
     checkCudaErrors(cudaEventRecord(start, 0));// 0 - the default stream
-    optimized_cuda_h_ellpack_product_2<<<gridSize,blockSize>>>(result->m, result->n, maxnz, AS, JA, hackOffsets, host_mat.hackSize, host_mat.numMatrix, host_mat.matDim, coeff, cuda_result);
+    optimized_cuda_h_ellpack_product_bis<<<gridSize,blockSize>>>(result->m, result->n, maxnz, AS, JA, hackOffsets, (int)host_mat.hackSize, host_mat.numMatrix, coeff, cuda_result);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     checkCudaErrors(cudaEventRecord(stop, 0));// 0 - the default stream
