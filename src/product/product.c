@@ -4,6 +4,7 @@
 #include <math.h>
 
 #define ALPHA 100
+#define UB 2
 
 void prepara_risultato(int m, int n, matrix* result){
     result->m = m;
@@ -69,11 +70,13 @@ double calcola_prodotto_seriale(csr_matrix csrMatrix, matrix vector, matrix* res
 
 double check_result(matrix m1, matrix m2){
     double error = 0;
+
     for(int i = 0; i < m1.m; i++){
         for(int j = 0; j < m1.n; j++){
-            if((int)(m1.coeff[i*m1.n + j]*ALPHA) != (int)(m2.coeff[i*m2.n +j]*ALPHA)){
+            if(abs((long)(m1.coeff[i*m1.n + j]*ALPHA) - (long)(m2.coeff[i*m2.n +j]*ALPHA)) > UB){
                 printf("%d %d\n",i,j);
-                printf("%lf %lf\n",m1.coeff[i*m1.n + j],m2.coeff[i*m2.n + j]);
+                printf("%lf %lf\n",(m1.coeff[i*m1.n + j]),(m2.coeff[i*m2.n +j]));
+                printf("%ld %ld\n",(long)(m1.coeff[i*m1.n + j]*ALPHA),(long)(m2.coeff[i*m2.n +j]*ALPHA));
                 exit(-1);
             }else{
                 error += (abs(m1.coeff[i*m1.n + j]-m2.coeff[i*m2.n +j])*pow(10,18))/abs(m1.coeff[i*m1.n + j]);

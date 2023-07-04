@@ -21,14 +21,14 @@ double* move_matrix_coeff_on_gpu(matrix* vector);
 
 void optimized_cuda_ellpack_product(ellpack_matrix* mat, matrix vector, matrix* result);
 void optimized_cuda_h_ellpack_product(int m, int n, long* maxnz, double* AS, long* JA, long* hackOffsets, long hackSize, long numMatrix, double* coeff, double* myRes);
-
+void optimized_cuda_h_ellpack_product_2(int nRows, int nCols, int* maxnz, double* AS, int* JA, int* hackOffsets, int hackSize, int numMatrix, double* multivector, double* myRes);
 double optimized_cuda_ellpack_product_in(ellpack_matrix host_mat, matrix vector, matrix* result);
 
 void print_gpu_matrix_d(double* matrix, int m, int n);
 void print_gpu_matrix_i(int* matrix, int m, int n);
 double optimized_cuda_ellpack_product_in(ellpack_matrix host_mat, matrix vector, matrix* result);
 double optimized_cuda_h_ellpack_product_in(h_ellpack_matrix host_mat, matrix vector, matrix* result);
-
+double optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_mat, matrix multivector, matrix* result);
 
 
 #endif

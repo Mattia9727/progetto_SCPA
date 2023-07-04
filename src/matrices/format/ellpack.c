@@ -103,7 +103,7 @@ void free_ellpack_matrix(ellpack_matrix* matrix){
 }
 
 void print_h_ellpack_matrix(h_ellpack_matrix matrix){
-    printf("M = %d, N = %d, NumMatrix = %d, HackSize = %d\n\n",matrix.m, matrix.n, matrix.numMatrix, matrix.hackSize);
+    printf("M = %d, N = %d, NumMatrix = %d, HackSize = %d, Matdim = %d\n\n",matrix.m, matrix.n, matrix.numMatrix, matrix.hackSize, matrix.matDim);
 
     printf("\nMaxnz: \n");
     for (long i=0; i<matrix.numMatrix; i++){
@@ -111,7 +111,7 @@ void print_h_ellpack_matrix(h_ellpack_matrix matrix){
     }
 
     printf("\nHackOffsets: \n");
-    for (long i=0; i<matrix.numMatrix; i++){
+    for (long i=0; i<=matrix.numMatrix; i++){
         printf("%d ",matrix.hackOffsets[i]);
     }
 
@@ -120,6 +120,7 @@ void print_h_ellpack_matrix(h_ellpack_matrix matrix){
     //    printf("%f \n",matrix.AS[i]);
     //}
     //è TUTTO ALLOCATO BENE, NON FUNZIONA LA PRINT
+    
     for (long i=0; i<matrix.numMatrix; i++){
         printf("\nAS %d (Matrice di nonzeri): \n",i);
         for(long j=0; j < matrix.hackSize; j++) {
@@ -139,6 +140,7 @@ void print_h_ellpack_matrix(h_ellpack_matrix matrix){
         }
         printf("\n\n");
     }
+    
 }
 
 h_ellpack_matrix convert_coo_to_h_ellpack(coo_matrix mat){
@@ -246,7 +248,102 @@ h_ellpack_matrix convert_coo_to_h_ellpack(coo_matrix mat){
     return converted_matrix;
 }
 
+h_ellpack_matrix_bis convert_coo_to_h_ellpack_bis(coo_matrix mat){
+    h_ellpack_matrix_bis converted_matrix;
+    converted_matrix.m = mat.m;
+    converted_matrix.n = mat.n;
+    converted_matrix.hackSize = 128;
+    converted_matrix.numMatrix = converted_matrix.m/converted_matrix.hackSize + 1;
+    converted_matrix.hackOffsets = (int*)calloc(converted_matrix.numMatrix+1,sizeof(int));
+    converted_matrix.maxnz = (int*)calloc(converted_matrix.numMatrix,sizeof(int));
+
+    int* row_arr = (int*)calloc(mat.m,sizeof(int));
+    for (int i=0; i<mat.nz; i++){
+        //printf("rowarr i=%ld\n",i);
+        row_arr[mat.rows[i]]++;
+    }
+    // CALCOLO DI TUTTI I MAXNZ PER OGNI COPPIA AS E JA DI SOTTOMATRICI
+    for (int i=0; i<converted_matrix.numMatrix; i++){
+        //printf("maxnz i=%ld\n",i);
+        int max_nz=0;
+        for (int j=0; j<converted_matrix.hackSize; j++){
+            
+            if(i * converted_matrix.hackSize + j < converted_matrix.m) max_nz = max(max_nz,row_arr[i * converted_matrix.hackSize + j]);
+            else break;
+            //printf("rowarr index:%d, nz=%d, maxnz=%d\n",i * converted_matrix.hackSize + j,row_arr[mat.rows[i * converted_matrix.hackSize + j]],max_nz);
+        }
+        //printf("\n");
+        converted_matrix.maxnz[i]= max_nz;
+    }
+
+    //for (int i=0; i<converted_matrix.numMatrix; i++){
+    //    printf("maxnz: %d\n",converted_matrix.maxnz[i]);
+    //}
+
+    // CALCOLO DEGLI OFFSET TRA UNA COPPIA AS E JA DI SOTTOMATRICI E LA SUCCESSIVA
+    for (int i=1; i<converted_matrix.numMatrix+1; i++){
+        converted_matrix.hackOffsets[i] = converted_matrix.hackOffsets[i-1] + converted_matrix.maxnz[i-1] * converted_matrix.hackSize;
+        
+    }
+
+    //for (int i=0; i<converted_matrix.numMatrix+1; i++){
+    //    printf("hackOffsets: %d\n",converted_matrix.hackOffsets[i]);
+    //}
+    free(row_arr);
+
+
+    // ALLOCAZIONE AS E JA
+    int mat_dim = 0;
+    for (int i=0; i<converted_matrix.numMatrix; i++){
+        //printf("hackSize=%d, maxnz=%d, prod=%d\n",converted_matrix.hackSize, converted_matrix.maxnz[i],converted_matrix.hackSize * converted_matrix.maxnz[i]);
+        mat_dim += converted_matrix.hackSize * converted_matrix.maxnz[i];
+    }
+    printf("matdim=%ld, numMatrix=%d\n",mat_dim,converted_matrix.numMatrix);
+    converted_matrix.matDim = mat_dim;
+    //printf("MATDIM: %d\n",mat_dim);
+    converted_matrix.AS = (double*)calloc(mat_dim,sizeof(double));
+    converted_matrix.JA = (int*)calloc(mat_dim,sizeof(int));
+
+    // COSTRUZIONE AS E JA
+    int row;
+    int* col_arr = (int*)calloc(converted_matrix.m,sizeof(int));
+    //FILE *debug_col = fopen("../measurements/results/debug_col.csv", "w+");
+    //for (long i=0; i<converted_matrix.m; i++){
+    //    fprintf(debug_col,"row = %ld, col= %ld\n",i,col_arr[i]);
+    //}
+    //FILE *debug = fopen("../measurements/results/debug.csv", "w+");
+    //printf("nznznz: %d\n\n",mat.nz);
+    //for (int i=0; i<mat.nz; i++){
+    //    fprintf(debug,"%d: col=%d, row =%d, val=%f \n",i,mat.cols[i],mat.rows[i],mat.values[i]);
+    //}        
+    //FILE *debug = fopen("../measurements/results/debug_H.csv", "w+");
+    int counter=0;
+
+    for (int i=0; i<mat.nz; i++){
+        //printf("i=%ld\n",i);
+        int row = mat.rows[i];
+        int submatrix = row/converted_matrix.hackSize;
+        int subrow = row%converted_matrix.hackSize;
+        converted_matrix.AS[converted_matrix.hackOffsets[row/converted_matrix.hackSize] + subrow*converted_matrix.maxnz[submatrix] + col_arr[row]] = (double)mat.values[i];
+        converted_matrix.JA[converted_matrix.hackOffsets[row/converted_matrix.hackSize] + subrow*converted_matrix.maxnz[submatrix] + col_arr[row]] = mat.cols[i];
+        col_arr[row]++;
+    }
+
+    
+    free(col_arr);
+
+
+    return converted_matrix;
+}
+
 void free_h_ellpack_matrix(h_ellpack_matrix* matrix){
+    free(matrix->AS);
+    free(matrix->JA);
+    free(matrix->maxnz);
+    free(matrix->hackOffsets);
+}
+
+void free_h_ellpack_matrix(h_ellpack_matrix_bis* matrix){
     free(matrix->AS);
     free(matrix->JA);
     free(matrix->maxnz);
@@ -319,5 +416,49 @@ void fprint_h_ellpack_matrix(h_ellpack_matrix matrix){
         }
         fprintf(hellp,"\n\n");
     }
+    fclose(hellp);
+}
+
+void fprint_h_ellpack_matrix_bis(h_ellpack_matrix_bis matrix){
+
+    FILE *hellp = fopen("../measurements/results/hellp.csv", "a");
+
+    fprintf(hellp,"M = %d, N = %d, NumMatrix = %d, HackSize = %d\n\n",matrix.m, matrix.n, matrix.numMatrix, matrix.hackSize);
+
+    fprintf(hellp,"\nMaxnz: \n");
+    for (int i=0; i<matrix.numMatrix; i++){
+        fprintf(hellp,"%d ",matrix.maxnz[i]);
+    }
+
+    fprintf(hellp,"\nHackOffsets: \n");
+    for (int i=0; i<matrix.numMatrix; i++){
+        fprintf(hellp,"%d ",matrix.hackOffsets[i]);
+    }
+
+    //PROVA
+    //for (int i=0; i<matrix.m*matrix.maxnz[0]; i++){
+    //    printf("%f \n",matrix.AS[i]);
+    //}
+    //è TUTTO ALLOCATO BENE, NON FUNZIONA LA PRINT
+    /*
+    for (int i=0; i<matrix.numMatrix; i++){
+        fprintf(hellp,"\nAS %d (Matrice di nonzeri): \n",i);
+        for(int j=0; j < matrix.hackSize; j++) {
+            fprintf(hellp,"[");
+            for (int k = 0; k < matrix.maxnz[i]; k++) {
+                fprintf(hellp,"%f ",matrix.AS[matrix.hackOffsets[i] + k + j*matrix.maxnz[i]]);
+            }
+            fprintf(hellp,"]\n");
+        }
+        fprintf(hellp,"\nJA %d (Indici di nonzeri): \n",i);
+        for(int j=0; j < matrix.hackSize; j++) {
+            fprintf(hellp,"[");
+            for (int k = 0; k < matrix.maxnz[i]; k++) {
+                fprintf(hellp,"%d ",matrix.JA[matrix.hackOffsets[i] + k + j*matrix.maxnz[i]]);
+            }
+            fprintf(hellp,"]\n");
+        }
+        fprintf(hellp,"\n\n");
+    }*/
     fclose(hellp);
 }
