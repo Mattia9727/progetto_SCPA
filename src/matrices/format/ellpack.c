@@ -252,7 +252,7 @@ h_ellpack_matrix_bis convert_coo_to_h_ellpack_bis(coo_matrix mat){
     h_ellpack_matrix_bis converted_matrix;
     converted_matrix.m = mat.m;
     converted_matrix.n = mat.n;
-    converted_matrix.hackSize = 128;
+    converted_matrix.hackSize = 32;
     converted_matrix.numMatrix = converted_matrix.m/converted_matrix.hackSize + 1;
     converted_matrix.hackOffsets = (int*)calloc(converted_matrix.numMatrix+1,sizeof(int));
     converted_matrix.maxnz = (int*)calloc(converted_matrix.numMatrix,sizeof(int));
@@ -421,7 +421,7 @@ void fprint_h_ellpack_matrix(h_ellpack_matrix matrix){
 
 void fprint_h_ellpack_matrix_bis(h_ellpack_matrix_bis matrix){
 
-    FILE *hellp = fopen("../measurements/results/hellp.csv", "a");
+    FILE *hellp = fopen("../measurements/results/hellp.csv", "w+");
 
     fprintf(hellp,"M = %d, N = %d, NumMatrix = %d, HackSize = %d\n\n",matrix.m, matrix.n, matrix.numMatrix, matrix.hackSize);
 

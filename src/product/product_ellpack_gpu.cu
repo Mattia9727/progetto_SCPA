@@ -162,34 +162,82 @@ __global__ void optimized_cuda_h_ellpack_product_2(int nRows, int nCols, int* ma
     int tid = threadIdx.x; //Indice del thread nel warp
     int start,end;
     double val;
-    int col;
-    //int print = 0;
-    double sum[8192] = {0};
+    int col,maxnzBlock,col_mul;
+    int nReplic = 0;
+    __shared__ double vals[1024];
+    __shared__ int cols[1024]; 
+    __shared__ double sum[1024];
+    // Ciclo nel caso in cui il num di blocchi fosse minore del num di righe
     for(int subMat = idxBlock; subMat < numMatrix; subMat += MAX_GRID_SIZE){
         // Devo identificare la sottomatrice    
         start = hackOffsets[subMat];
         end = hackOffsets[subMat+1];
-        for(int warp = warpId; warp < hackSize; warp += WARP_SIZE){
-            if(nRows - subMat*hackSize - warp > 0){
-                for(int idx = start + warp*maxnz[subMat]+tid; idx < start + (warp+1)*maxnz[subMat]; idx +=WARP_SIZE){
-                    val = AS[idx];
-                    col = JA[idx];
-                    if(val != 0.0){
-                        for(int col_m = 0; col_m < nCols; col_m++){
-                            sum[warp*nCols + col_m] += val * multivector[col*nCols + col_m];                              
-                        }
-                    }
-                }
-            }
-            for(int j = 0; j < nCols; j++){
-                sum[warp*nCols +j] = warp_reduce_2(sum[warp*nCols +j]);
-                if(tid == 0){
-                    myRes[(subMat*hackSize + warp)*nCols+j] = sum[warp*nCols +j];
-                    sum[warp*nCols +j] = 0.0;
-                }
-            }
-        }
+        maxnzBlock = maxnz[subMat];
         
+        if(maxnzBlock <= 32 && maxnzBlock >0){
+            nReplic = (int)32/maxnzBlock;
+            
+            if(tid < maxnzBlock){
+                val = AS[start+warpId*maxnzBlock + tid];
+                col = JA[start+warpId*maxnzBlock + tid];
+                for(int i = 0; i < nReplic; i++){
+                    vals[warpId*32 + tid + i*maxnzBlock] = val;
+                    cols[warpId*32 + tid + i*maxnzBlock] = col;
+                }
+            }
+            
+        } 
+        if(tid == 0 && warpId == 0) printf("%d %d %d %d\n",maxnzBlock,nReplic,subMat,nCols);
+        for(int col_m = 0; col_m < nCols; col_m+=nReplic){
+            //if(subMat == 0 && tid == 0 && warpId == 0) printf("%d\n",col_m);
+            //questo  ciclo mi scorre nelle righe della sottomatrice
+            for(int warp = warpId; warp < hackSize; warp += WARP_SIZE){
+                if(nRows - subMat*hackSize - warp > 0){
+                    sum[warp*32 + tid] = 0.0;
+                    //questo ciclo mi scorre negli elementi della riga
+                    if(nReplic <= 0){
+                        //if(subMat == 0 && tid == 0 && warpId == 0) printf("1 ciao\n");
+                        for(int idx = start + warp*maxnzBlock+tid; idx < start + (warp+1)*maxnzBlock; idx +=WARP_SIZE){
+                            val = AS[idx];
+                            col = JA[idx];
+                            sum[warp*32 + tid] += val * multivector[col*nCols + col_m]; 
+                        }
+                        //if(subMat == 0 && tid == 0 && warpId == 0) printf("1 eccomi\n");
+                    }else{
+                        //if(subMat == 0 && warp == 0) printf("2 ciao %d\n",tid);
+                        if(tid < nReplic*maxnzBlock){
+                            col_mul = tid/maxnzBlock + col_m;
+                            if(col_mul < nCols){
+                                sum[warp*32 + tid] += vals[warp*32+tid] * multivector[cols[warp*32+tid]*nCols + col_mul];
+                            }
+                                
+                        }
+                        //if(subMat == 0 && warp == 0) printf("2 eccomi %d\n",tid);
+                    }
+                    
+                }
+            }
+            //if(subMat == 0 && tid == 0 && warpId == 0) printf("%d\n",col_m);
+            __syncthreads();
+            //if(subMat == 0 && tid == 0 && warpId == 0) printf("ciao\n");
+            if(tid == 0 && nReplic <= 0){
+                for(int i = 1; i < 32; i++){
+                    sum[warpId*32] += sum[warpId*32+i];
+                }
+                myRes[(subMat*hackSize + warpId)*nCols+col_m] = sum[warpId*32];   
+            } else if(nReplic > 0 && tid < nReplic){
+                for(int i = 1; i < maxnzBlock; i++){
+                    sum[warpId*32+tid*maxnzBlock] += sum[warpId*32 + tid*maxnzBlock + i];
+                }
+                if(col_m + tid < nCols){
+                    myRes[(subMat*hackSize + warpId)*nCols+col_m + tid] = sum[warpId*32+tid*maxnzBlock];
+                }
+                
+            }
+            
+            __syncthreads();
+            //if(subMat == 0 && tid == 0 && warpId == 0) printf("%d\n",col_m);
+        }
         
     }
 

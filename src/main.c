@@ -40,7 +40,7 @@ int main(){
         "../measurements/matrix_files/west2021.mtx",
         "../measurements/matrix_files/mhda416.mtx",
         "../measurements/matrix_files/adder_dcop_32.mtx",
-        //"../measurements/matrix_files/mcfe.mtx",
+        "../measurements/matrix_files/mcfe.mtx",
         "../measurements/matrix_files/rdist2.mtx",
         "../measurements/matrix_files/cavity10.mtx",
         "../measurements/matrix_files/mhd4800a.mtx",
