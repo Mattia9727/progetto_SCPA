@@ -38,6 +38,18 @@ typedef struct {
     double* AS;
 } h_ellpack_matrix_bis;
 
+typedef struct {
+    int m;
+    int n;
+    int* hackSize;
+    int numMatrix;
+    int matDim;
+    int* hackOffsets;
+    int* maxnz;
+    int* JA;
+    double* AS;
+} h_ellpack_matrix_tris;
+
 void print_ellpack_matrix(ellpack_matrix matrix);
 ellpack_matrix convert_to_ellpack(sparse_matrix* matrix);
 ellpack_matrix convert_coo_to_ellpack(coo_matrix mat);
