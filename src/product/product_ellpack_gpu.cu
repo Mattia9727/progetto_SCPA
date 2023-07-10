@@ -162,64 +162,73 @@ __global__ void optimized_cuda_h_ellpack_product_2(int nRows, int nCols, int* ma
     int tid = threadIdx.x; //Indice del thread nel warp
     int start,end;
     double val;
-    int col,maxnzBlock,col_mul;
-    int nReplic = 0;
-    __shared__ double vals[1024];
-    __shared__ int cols[1024]; 
+    int col,maxnzBlock,col_mul,col_incr = 1;
+    int nReplic = 0, state = 0;
+    __shared__ int sharedState;
+    __shared__ double vals[3392];
+    __shared__ int cols[3392]; 
     __shared__ double sum[1024];
     // Ciclo nel caso in cui il num di blocchi fosse minore del num di righe
-    for(int subMat = idxBlock; subMat < numMatrix; subMat += MAX_GRID_SIZE){
+    for(int subMat = idxBlock; subMat < numMatrix; subMat += gridDim.x){
         // Devo identificare la sottomatrice    
         start = hackOffsets[subMat];
         end = hackOffsets[subMat+1];
         maxnzBlock = maxnz[subMat];
-        
-        if(maxnzBlock <= 32 && maxnzBlock >0){
-            nReplic = (int)32/maxnzBlock;
-            
-            if(tid < maxnzBlock){
-                val = AS[start+warpId*maxnzBlock + tid];
-                col = JA[start+warpId*maxnzBlock + tid];
-                for(int i = 0; i < nReplic; i++){
-                    vals[warpId*32 + tid + i*maxnzBlock] = val;
-                    cols[warpId*32 + tid + i*maxnzBlock] = col;
-                }
+
+        if(maxnzBlock <= 106){
+            sharedState = 0;
+            if(maxnzBlock <= 32 && maxnzBlock >0){
+                nReplic = (int)32/maxnzBlock;
+                col_incr = nReplic;
             }
-            
-        } 
-        if(tid == 0 && warpId == 0) printf("%d %d %d %d\n",maxnzBlock,nReplic,subMat,nCols);
-        for(int col_m = 0; col_m < nCols; col_m+=nReplic){
-            //if(subMat == 0 && tid == 0 && warpId == 0) printf("%d\n",col_m);
+        }else sharedState = -1;
+
+        for(int col_m = 0; col_m < nCols; col_m+=col_incr){
             //questo  ciclo mi scorre nelle righe della sottomatrice
             for(int warp = warpId; warp < hackSize; warp += WARP_SIZE){
                 if(nRows - subMat*hackSize - warp > 0){
-                    sum[warp*32 + tid] = 0.0;
+                    sum[warpId*32 + tid] = 0.0;
                     //questo ciclo mi scorre negli elementi della riga
-                    if(nReplic <= 0){
-                        //if(subMat == 0 && tid == 0 && warpId == 0) printf("1 ciao\n");
+                    if(sharedState == 0 || nReplic <= 0){
                         for(int idx = start + warp*maxnzBlock+tid; idx < start + (warp+1)*maxnzBlock; idx +=WARP_SIZE){
-                            val = AS[idx];
-                            col = JA[idx];
-                            sum[warp*32 + tid] += val * multivector[col*nCols + col_m]; 
+                            if(sharedState == -1){
+                                val = AS[idx];
+                                col = JA[idx];
+                                sum[warp*32 + tid] += val * multivector[col*nCols + col_m];
+                            }                                
+                            else if(sharedState == 0){
+                                val = AS[idx];
+                                col = JA[idx];
+                                vals[warp*106 +idx-start-warp*maxnzBlock] = val;
+                                cols[warp*106 +idx-start-warp*maxnzBlock] = col;
+                                if(nReplic <= 0)
+                                    sum[warp*32 + tid] += val * multivector[col*nCols + col_m];
+                                state = 1;
+                            }else{
+                                sum[warp*32 + tid] += vals[warp*106+idx-start-warp*maxnzBlock] * multivector[cols[warp*106+idx-start-warp*maxnzBlock]*nCols + col_m];
+                            }
                         }
-                        //if(subMat == 0 && tid == 0 && warpId == 0) printf("1 eccomi\n");
-                    }else{
-                        //if(subMat == 0 && warp == 0) printf("2 ciao %d\n",tid);
+                    }
+                    if(sharedState == 0){
+                        __syncthreads();
+                        if(state == 1) sharedState = 1;
+                        __syncthreads();
+                    }
+                    if(sharedState == 1 && nReplic > 0){
+                        //shared state pronta 
                         if(tid < nReplic*maxnzBlock){
                             col_mul = tid/maxnzBlock + col_m;
                             if(col_mul < nCols){
-                                sum[warp*32 + tid] += vals[warp*32+tid] * multivector[cols[warp*32+tid]*nCols + col_mul];
+                                sum[warp*32 + tid] += vals[warp*106+tid%maxnzBlock] * multivector[cols[warp*106+tid%maxnzBlock]*nCols + col_mul];
                             }
                                 
                         }
-                        //if(subMat == 0 && warp == 0) printf("2 eccomi %d\n",tid);
-                    }
-                    
+                    }  
                 }
             }
-            //if(subMat == 0 && tid == 0 && warpId == 0) printf("%d\n",col_m);
+            
             __syncthreads();
-            //if(subMat == 0 && tid == 0 && warpId == 0) printf("ciao\n");
+            
             if(tid == 0 && nReplic <= 0){
                 for(int i = 1; i < 32; i++){
                     sum[warpId*32] += sum[warpId*32+i];
@@ -234,9 +243,8 @@ __global__ void optimized_cuda_h_ellpack_product_2(int nRows, int nCols, int* ma
                 }
                 
             }
-            
             __syncthreads();
-            //if(subMat == 0 && tid == 0 && warpId == 0) printf("%d\n",col_m);
+            
         }
         
     }
@@ -281,7 +289,6 @@ double optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_mat, ma
     checkCudaErrors(cudaEventCreate(&stop));
     checkCudaErrors(cudaEventRecord(start, 0));// 0 - the default stream
     optimized_cuda_h_ellpack_product_2<<<gridSize,blockSize>>>(host_mat.m, multivector.n, d_maxnz, d_as, d_ja, d_hackOffset, host_mat.hackSize, host_mat.numMatrix, d_multivector, d_result);
-    checkCudaErrors(cudaDeviceSynchronize());
     checkCudaErrors(cudaEventRecord(stop, 0));// 0 - the default stream
     checkCudaErrors(cudaEventSynchronize(stop));
     checkCudaErrors(cudaEventElapsedTime(&time, start, stop));

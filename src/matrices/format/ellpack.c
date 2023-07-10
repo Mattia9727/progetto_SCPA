@@ -254,6 +254,7 @@ h_ellpack_matrix_bis convert_coo_to_h_ellpack_bis(coo_matrix mat){
     converted_matrix.n = mat.n;
     converted_matrix.hackSize = 32;
     converted_matrix.numMatrix = converted_matrix.m/converted_matrix.hackSize + 1;
+    if(converted_matrix.m%converted_matrix.hackSize == 0) converted_matrix.numMatrix--;
     converted_matrix.hackOffsets = (int*)calloc(converted_matrix.numMatrix+1,sizeof(int));
     converted_matrix.maxnz = (int*)calloc(converted_matrix.numMatrix,sizeof(int));
 
@@ -421,20 +422,26 @@ void fprint_h_ellpack_matrix(h_ellpack_matrix matrix){
 
 void fprint_h_ellpack_matrix_bis(h_ellpack_matrix_bis matrix){
 
-    FILE *hellp = fopen("../measurements/results/hellp.csv", "w+");
+    FILE *hellp = fopen("../measurements/results/hellp.csv", "a");
 
     fprintf(hellp,"M = %d, N = %d, NumMatrix = %d, HackSize = %d\n\n",matrix.m, matrix.n, matrix.numMatrix, matrix.hackSize);
+    int count = 0;
+    for (int i=0; i<matrix.numMatrix; i++){
+        if(matrix.maxnz[i] > 32 && matrix.maxnz[i] < 96) count++;
+    }
+    fprintf(hellp,"%d ",count);
 
+    /*
     fprintf(hellp,"\nMaxnz: \n");
     for (int i=0; i<matrix.numMatrix; i++){
         fprintf(hellp,"%d ",matrix.maxnz[i]);
     }
-
+    
     fprintf(hellp,"\nHackOffsets: \n");
     for (int i=0; i<matrix.numMatrix; i++){
         fprintf(hellp,"%d ",matrix.hackOffsets[i]);
     }
-
+    */
     //PROVA
     //for (int i=0; i<matrix.m*matrix.maxnz[0]; i++){
     //    printf("%f \n",matrix.AS[i]);
