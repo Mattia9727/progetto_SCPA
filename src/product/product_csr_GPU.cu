@@ -3,7 +3,8 @@
 #include <helper_cuda.h>
 #include <iostream>
 
-#define MAX_NNZ_PER_WG 6144
+//#define MAX_NNZ_PER_WG 6144
+#define MAX_NNZ_PER_WG 4096
 #define MAX_BLOCK_THREADS 1024
 #define MAX_GRID_SIZE 65536
 #define WARP_SIZE 32
@@ -16,7 +17,7 @@ __device__ double warp_reduce(double val){
 }
  
 int* calculate_rows_block(int totalRows, int* irp, int* numBlocks){
-    int* rowBlocks = (int*)malloc(21000*sizeof(int));
+    int* rowBlocks = (int*)malloc(MAX_GRID_SIZE*sizeof(int));
     rowBlocks[0] = 0; 
     int sum = 0, last_i= 0, ctr=1; 
     for(int i = 1; i < totalRows; i++){
@@ -72,6 +73,7 @@ __global__ void sparseDenseMatrixMul(double* as, int* ja, int* irp, int m, doubl
 
 __global__ void csrAdaptiveMult(double* as, int* ja, int* irp, double* multivector, int m, int n, int col_multivector, int* rowBlocks, double* resultData){
     __shared__ double vals[MAX_NNZ_PER_WG];
+    __shared__ int cols[MAX_NNZ_PER_WG];
     
     int startRow = rowBlocks[blockIdx.x];
     int stopRow = rowBlocks[blockIdx.x+1];
@@ -82,26 +84,29 @@ __global__ void csrAdaptiveMult(double* as, int* ja, int* irp, double* multivect
         //printf("csr stream\n");
         int tid = threadIdx.x; // indice del thread nel blocco
         int localCol;
+        //for(int j = 0; j < col_multivector; j++){
+        for(int i = tid; i < nnz; i+= blockDim.x){ 
+            localCol = irp[startRow]+i;
+            vals[i] = as[localCol];
+            //vals[i] *= multivector[ja[localCol]*col_multivector+j];
+            cols[i] = ja[localCol];
+        }
+        int firstCol = irp[startRow];
+        int localRow = startRow + tid;
+        
+        __syncthreads();
         for(int j = 0; j < col_multivector; j++){
-            for(int i = tid; i < nnz; i+= blockDim.x){ 
-                localCol = irp[startRow]+i;
-                vals[i] = as[localCol];
-                vals[i] *= multivector[ja[localCol]*col_multivector+j];
-            }
-            int firstCol = irp[startRow];
-            int localRow = startRow + tid;
-            
-            __syncthreads();
             while(localRow < stopRow){
                 double temp = 0; 
                 for(int i = irp[localRow]-firstCol; i < irp[localRow+1]-firstCol; i++){
-                    temp += vals[i];
+                    temp += vals[i]*multivector[cols[i]*col_multivector+j];
                 }
                 resultData[localRow*col_multivector +j] = temp;
                 localRow += blockDim.x;
             }
-            __syncthreads();
-        }
+        }    
+        __syncthreads();
+        //}
     }else {
         //CSR-Vector
         int threadId = threadIdx.x; // global thread index
@@ -134,6 +139,7 @@ __global__ void csrAdaptiveMult(double* as, int* ja, int* irp, double* multivect
 
 __global__ void csrAdaptiveMultOttimizzato(double* as, int* ja, int* irp, double* multivector, int m, int n, int col_multivector, int* rowBlocks, double* resultData){
     __shared__ double vals[MAX_NNZ_PER_WG];
+    __shared__ int cols[MAX_NNZ_PER_WG];
     
     int startRow = rowBlocks[blockIdx.x];
     int stopRow = rowBlocks[blockIdx.x+1];
@@ -145,26 +151,29 @@ __global__ void csrAdaptiveMultOttimizzato(double* as, int* ja, int* irp, double
         //printf("csr stream\n");
         
         int localCol;
-        for(int j = 0; j < col_multivector; j++){
-            for(int i = tid; i < nnz; i+= blockDim.x){ 
-                localCol = irp[startRow]+i;
-                vals[i] = as[localCol];
-                vals[i] *= multivector[ja[localCol]*col_multivector+j];
-            }
-            int firstCol = irp[startRow];
-            int localRow = startRow + tid;
-            
-            __syncthreads();
-            while(localRow < stopRow){
-                double temp = 0; 
-                for(int i = irp[localRow]-firstCol; i < irp[localRow+1]-firstCol; i++){
-                    temp += vals[i];
-                }
-                resultData[localRow*col_multivector +j] = temp;
-                localRow += blockDim.x;
-            }
-            __syncthreads();
+        
+        for(int i = tid; i < nnz; i+= blockDim.x){ 
+            localCol = irp[startRow]+i;
+            vals[i] = as[localCol];
+            //vals[i] *= multivector[ja[localCol]*col_multivector+j];
+            cols[i] = ja[localCol];
         }
+        int firstCol = irp[startRow];
+        
+        
+        __syncthreads();
+        for(int t = tid; t < numRows*col_multivector; t += blockDim.x){
+            int localRow = startRow + t/col_multivector;
+            int j = t%col_multivector;
+            double temp = 0; 
+            for(int i = irp[localRow]-firstCol; i < irp[localRow+1]-firstCol; i++){
+                temp += vals[i]*multivector[cols[i]*col_multivector + j];
+            }
+            resultData[localRow*col_multivector +j] = temp;
+        }
+           
+        __syncthreads();    
+        
     }else {
         //CSR-Vector
         //printf("csr vector\n");
@@ -174,12 +183,25 @@ __global__ void csrAdaptiveMultOttimizzato(double* as, int* ja, int* irp, double
         double val; 
         int col;
         double sum[64] = {0};   
-    
+        if(nnz < 4096){
+            int localCol;
+            for(int i = tid; i < nnz; i+= blockDim.x){ 
+                localCol = irp[startRow]+i;
+                vals[i] = as[localCol];
+                cols[i] = ja[localCol];
+            }
+        }
+        __syncthreads();
         if(warpId < col_multivector){
             for(int col_m = warpId; col_m < col_multivector; col_m +=32){
                 for(int i = irp[startRow] + lane; i < irp[startRow+1]; i +=32){
-                    val = as[i];
-                    col = ja[i];
+                    if(nnz < 4096){
+                        val = as[i];
+                        col = ja[i];
+                    }else{
+                        val = as[i];
+                        col = ja[i];
+                    }
                     sum[col_m] += val*multivector[col*col_multivector + col_m];     
                 }
                 sum[col_m] = warp_reduce(sum[col_m]);

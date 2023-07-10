@@ -459,18 +459,25 @@ void fprint_h_ellpack_matrix_bis(h_ellpack_matrix_bis matrix){
     FILE *hellp = fopen("../measurements/results/hellp.csv", "w+");
 
     fprintf(hellp,"M = %d, N = %d, NumMatrix = %d, HackSize = %d\n\n",matrix.m, matrix.n, matrix.numMatrix, matrix.hackSize);
+    int count = 0;
+    for (int i=0; i<matrix.numMatrix; i++){
+        if(matrix.maxnz[i] > 32 && matrix.maxnz[i] < 96) count++;
+    }
+    fprintf(hellp,"%d ",count);
 
+    /*
     fprintf(hellp,"\nMaxnz: \n");
     for (int i=0; i<matrix.numMatrix; i++){
         fprintf(hellp,"%d ",matrix.maxnz[i]);
     }
-
+    
     fprintf(hellp,"\nHackOffsets: \n");
     for (int i=0; i<matrix.numMatrix; i++){
         fprintf(hellp,"%d ",matrix.hackOffsets[i]);
     }
 
     /*for (int i=0; i<matrix.numMatrix; i++){
+
         fprintf(hellp,"\nAS %d (Matrice di nonzeri): \n",i);
         for(int j=0; j < matrix.hackSize; j++) {
             fprintf(hellp,"[");

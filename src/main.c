@@ -7,9 +7,9 @@
 #include <math.h>
 #include "matrices/format/headers/ellpack.h"
 
-#define NFILES 30
-#define NREPETITIONS 1
-#define FILEHEADER "nThreads, MatrixName, NRows, NCol, NZ, k, time, err_rel, GFLOPS, speedup\n"
+#define NFILES 29
+#define NREPETITIONS 2
+#define FILEHEADER "nThreads, MatrixName, NRows, NCol, NZ, k, time, err_rel, bandwidth, GFLOPS, speedup\n"
 #define MAX_N_THREADS 40
 #define STARTFILE 0
 
@@ -20,6 +20,7 @@ int main(){
     h_ellpack_matrix converted_h_ellpack_matrix;
     h_ellpack_matrix_bis converted_h_ellpack_matrix_bis;
     matrix multivector, result_par, result_ser,multivector_T;
+    long byte_csr_trasfer = 0;
     clock_t begin, end;
     double timeSumSer = 0.0, timeSumCsrOmp = 0.0, timeSumEllpackOmp = 0.0, timeSumEllpackCuda = 0.0, timeSumCsrCuda = 0.0;
     double errorCsrOmp = 0.0, errorEllpackOmp = 0.0, errorEllpackCuda = 0.0, errorCsrCuda = 0.0;
@@ -95,6 +96,7 @@ int main(){
             multivector_T = genera_trasposta(multivector);
             prepara_risultato(converted_csr_matrix.m, multivector.n, &result_ser);
             prepara_risultato(converted_csr_matrix.m, multivector.n, &result_par);
+            //byte_csr_trasfer = 
             timeSumSer = 0.0;
             timeSumCsrCuda = 0.0;
             timeSumEllpackCuda = 0.0;
@@ -109,13 +111,14 @@ int main(){
                 errorCsrCuda += check_result(result_ser,result_par);
                 speedupCsrCuda = timeSumCsrCuda/timeSumSer;
                 free_matrix(&result_par);*/
-                
+                /*
+
                 prepara_risultato(converted_csr_matrix.m, multivector.n,&result_par);
                 timeSumEllpackCuda += optimized_cuda_h_ellpack_product_in_bis(converted_h_ellpack_matrix_bis, multivector_T, &result_par);
                 errorEllpackCuda += check_result(result_ser,result_par);
                 speedupEllpackCuda = timeSumEllpackCuda/timeSumSer;
                 free_matrix(&result_par);
-                
+                */
             }
             //free_coo_matrix(&mat);
 
