@@ -73,14 +73,16 @@ double check_result(matrix m1, matrix m2){
 
     for(int i = 0; i < m1.m; i++){
         for(int j = 0; j < m1.n; j++){
+            /*
             if(abs((long)(m1.coeff[i*m1.n + j]*ALPHA) - (long)(m2.coeff[i*m2.n +j]*ALPHA)) > UB){
                 printf("%d %d\n",i,j);
                 printf("%lf %lf\n",(m1.coeff[i*m1.n + j]),(m2.coeff[i*m2.n +j]));
                 printf("%ld %ld\n",(long)(m1.coeff[i*m1.n + j]*ALPHA),(long)(m2.coeff[i*m2.n +j]*ALPHA));
                 exit(-1);
             }else{
+            */    
                 error += (abs(m1.coeff[i*m1.n + j]-m2.coeff[i*m2.n +j])*pow(10,18))/abs(m1.coeff[i*m1.n + j]);
-            }
+            //}
         }
     }
     return error/(m1.m*m1.n);

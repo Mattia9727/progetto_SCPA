@@ -21,7 +21,7 @@ double omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, in
     unsigned long maxnz= mat.maxnz, m = result->m, n= result->n;
     struct timespec start, end;
     int chunkSize = ((int)((mat.m/(float)nThreads)/16))*16;
-    if(chunkSize < 16) chunkSize = 16;
+    if(chunkSize <= 0) chunkSize = 16;
     clock_gettime(CLOCK_MONOTONIC, &start);
     #pragma omp parallel for schedule(static,chunkSize) shared(result, mat, vector) firstprivate(m,n,maxnz) private(t,i,j,k)
     for (i = 0; i < m; i++) {
@@ -46,7 +46,7 @@ double optimized_omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* 
     int curr_JA;
     struct timespec start, end;
     int chunkSize = ((int)((mat.m/(float)nThreads)/16))*16;
-    if(chunkSize < 16) chunkSize = 16;
+    if(chunkSize == 0) chunkSize = 16;
     
     clock_gettime(CLOCK_MONOTONIC, &start);
     #pragma omp parallel for schedule(static,chunkSize) num_threads(nThreads) shared(result, mat, vector) firstprivate(m,n,maxnz) private(t,i,j,k,prev_JA, curr_JA)
@@ -59,7 +59,7 @@ double optimized_omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* 
                 if (prev_JA<curr_JA){
                     prev_JA = curr_JA;
                     t = t + mat.AS[i*maxnz+j]*vector.coeff[curr_JA*n+k];
-                }else break;
+                }else j = mat.maxnz;
             
             }
             result->coeff[i*n+k] = t;

@@ -282,7 +282,7 @@ performance calcola_prodotto_csr_cuda(csr_matrix mat, matrix multivector, matrix
 
     performance perf;
     perf.time = (double)time/1000;
-    perf.bandwidth = (double)(8*(long)(mat.m * multivector.n + mat.nz+multivector.m * multivector.n))+4*(long)(mat.nz +mat.m +1 + num_blocks)/(perf.time);
+    perf.bandwidth = (double)(8*((mat.m * multivector.n)/perf.time + (mat.nz)/perf.time +(multivector.m * multivector.n)/perf.time ))+4*(4/perf.time+mat.nz/perf.time  +mat.m/perf.time + num_blocks/perf.time);
     perf.bandwidth = perf.bandwidth/pow(10,9);
     return perf;
     
