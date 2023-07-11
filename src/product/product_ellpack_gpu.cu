@@ -96,30 +96,46 @@ __global__ void optimized_cuda_h_ellpack_product(int m, int n, int* maxnz, doubl
     int first = 0;
     int last = 0;
     
-    if(bid == 0 && tid == 0) printf("%d\n",numMatrix);
     double res=0;
-    for (int submatIdx = bid; submatIdx<numMatrix; submatIdx += gridDim.x){
-        int counter = 0;
-        for (first = hackOffsets[submatIdx]; first < hackOffsets[submatIdx + 1]; first += (int)((4096.0/maxnz[submatIdx]))*maxnz[submatIdx]){
-            last = min(first + (int)((4096.0/maxnz[submatIdx]))*maxnz[submatIdx] , hackOffsets[submatIdx + 1]);
-            for (int idxS = first + tid; idxS < last; idxS += blockDim.x){
-                vals[idxS-first] = AS[idxS];
-                cols[idxS-first] = JA[idxS];
-            }
-            __syncthreads();
 
-            for(int t = tid; t<(last-first)/maxnz[submatIdx]*n; t +=blockDim.x){
-                for (int j=0; j<maxnz[submatIdx]; j++){
-                    res += vals[(t/n)*maxnz[submatIdx] + j] * coeff[cols[(t/n)*maxnz[submatIdx] + j]*n + (t%n)];
+    // Primo ciclo for: scorre più sottomatrici per singolo blocco nel caso in cui le sottomatrici sono più del massimo numero dei blocchi
+    for (int submatIdx = bid; submatIdx<numMatrix; submatIdx += gridDim.x){
+        // Se il numero delle colonne di AS e JA supera 4096, non è possibile salvare nemmeno una riga nella shared memory. In questo caso, si esegue il calcolo accedendo in memoria globale. 
+        if(maxnz[submatIdx] < 4096){
+            int counter = 0;
+            //Secondo ciclo for: scorre le righe della "sotto-sottomatrice"
+            for (first = hackOffsets[submatIdx]; first < hackOffsets[submatIdx + 1]; first += (int)((4096.0/maxnz[submatIdx]))*maxnz[submatIdx]){
+                last = min(first + (int)((4096.0/maxnz[submatIdx]))*maxnz[submatIdx] , hackOffsets[submatIdx + 1]);
+                //Terzo ciclo for: salva i valori di AS e JA nella memoria condivisa sfruttando tutti i thread del blocco
+                for (int idxS = first + tid; idxS < last; idxS += blockDim.x){
+                    vals[idxS-first] = AS[idxS];
+                    cols[idxS-first] = JA[idxS];
                 }
-                myRes[(hackSize*submatIdx + counter + t/n)*n + (t%n)] = res;
+                __syncthreads();
+                //Quarto ciclo for: esegue il calcolo accedendo alla shared memory
+                for(int t = tid; t<(last-first)/maxnz[submatIdx]*n; t +=blockDim.x){
+                    for (int j=0; j<maxnz[submatIdx]; j++){
+                        res += vals[(t/n)*maxnz[submatIdx] + j] * coeff[cols[(t/n)*maxnz[submatIdx] + j]*n + (t%n)];
+                    }
+                    myRes[(hackSize*submatIdx + counter + t/n)*n + (t%n)] = res;
+                    res=0;
+                }
+                
+                counter += (last-first)/maxnz[submatIdx];
+                __syncthreads();
+            
+            }    
+        }else{
+            for(int t = tid; t<hackSize*n; t +=blockDim.x){
+                for (int j=0; j<maxnz[submatIdx]; j++){
+                    res += AS[hackOffsets[submatIdx]+(t/n)*maxnz[submatIdx] + j] * coeff[JA[hackOffsets[submatIdx]+(t/n)*maxnz[submatIdx] + j]*n + (t%n)];
+                }
+                myRes[(hackSize*submatIdx + t/n)*n + (t%n)] = res;
                 res=0;
             }
-            
-            counter += (last-first)/maxnz[submatIdx];
             __syncthreads();
-            
-        }    
+        }
+        
     }
     
 }
@@ -182,14 +198,12 @@ performance optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_ma
     checkCudaErrors(cudaFree(d_hackOffset));
     checkCudaErrors(cudaFree(d_result));
 
-    // Trovo Bandwidth effettiva del kernel
-    double Br = 8*(host_mat.matDim + multivector.m*multivector.n) + 4*(host_mat.matDim+2*host_mat.numMatrix+1);
-    double Bw = (result->m * result->n) * 8;
-    double effective_bandwidth = ((Br+Bw)/(pow (10 ,9)))/(time/1000);
-
     // Restituisco struttura contenente tempo impiegato e bandwidth
     performance perf;
     perf.time = (double)time/1000;
+    double Br = 8*(host_mat.matDim/perf.time  + (multivector.m*multivector.n)/perf.time) + 4*(6/perf.time + host_mat.matDim/perf.time+(2*host_mat.numMatrix/perf.time));
+    double Bw = ((result->m * result->n)/perf.time) * 8;
+    double effective_bandwidth = ((Br+Bw)/(pow (10 ,9)));
     perf.bandwidth = effective_bandwidth;
 
     return perf;

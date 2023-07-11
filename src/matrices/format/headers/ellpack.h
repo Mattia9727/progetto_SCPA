@@ -57,8 +57,7 @@ void free_ellpack_matrix(ellpack_matrix* matrix);
 
 void print_h_ellpack_matrix(h_ellpack_matrix matrix);
 h_ellpack_matrix convert_coo_to_h_ellpack(coo_matrix mat);
-h_ellpack_matrix_bis convert_coo_to_h_ellpack_bis(coo_matrix mat);
-void free_h_ellpack_matrix(h_ellpack_matrix* matrix);
+h_ellpack_matrix_bis convert_coo_to_h_ellpack_bis(coo_matrix mat, int hackSize);
 void free_h_ellpack_matrix(h_ellpack_matrix_bis* matrix);
 
 void fprint_ellpack_matrix(ellpack_matrix matrix);
