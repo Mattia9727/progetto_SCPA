@@ -88,12 +88,14 @@ __global__ void optimized_cuda_h_ellpack_product(int m, int n, int* maxnz, doubl
     int bid = blockIdx.x;
     int tid = threadIdx.x;
     
-    //Definisco vettori in shared memory che conterranno gli elementi delle "sotto-sottomatrici" di AS e JA
+    // Definisco vettori in shared memory che conterranno gli elementi delle "sotto-sottomatrici" di AS e JA
     __shared__ double vals[4096];
     __shared__ int cols[4096];
 
+    // Le variabili first e last sono utilizzate per scorrere le sotto-sottomatrici
     int first = 0;
     int last = 0;
+    
     if(bid == 0 && tid == 0) printf("%d\n",numMatrix);
     double res=0;
     for (int submatIdx = bid; submatIdx<numMatrix; submatIdx += gridDim.x){
