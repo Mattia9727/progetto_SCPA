@@ -160,7 +160,6 @@ __global__ void csrAdaptiveMultOttimizzato(double* as, int* ja, int* irp, double
         }
         int firstCol = irp[startRow];
         
-        
         __syncthreads();
         for(int t = tid; t < numRows*col_multivector; t += blockDim.x){
             int localRow = startRow + t/col_multivector;
@@ -213,7 +212,7 @@ __global__ void csrAdaptiveMultOttimizzato(double* as, int* ja, int* irp, double
     }
 }
 
-double calcola_prodotto_csr_cuda(csr_matrix mat, matrix multivector, matrix* result){
+performance calcola_prodotto_csr_cuda(csr_matrix mat, matrix multivector, matrix* result){
     double* d_as;
     int* d_ja;
     int* d_irp, *d_rowBlocks;
@@ -281,6 +280,10 @@ double calcola_prodotto_csr_cuda(csr_matrix mat, matrix multivector, matrix* res
     checkCudaErrors(cudaFree(d_result));
     checkCudaErrors(cudaFree(d_rowBlocks));
 
-    return (double)time/1000;
+    performance perf;
+    perf.time = (double)time/1000;
+    perf.bandwidth = (double)(8*(long)(mat.m * multivector.n + mat.nz+multivector.m * multivector.n))+4*(long)(mat.nz +mat.m +1 + num_blocks)/(perf.time);
+    perf.bandwidth = perf.bandwidth/pow(10,9);
+    return perf;
     
 }

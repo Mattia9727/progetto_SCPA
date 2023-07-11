@@ -7,11 +7,11 @@
 #include <math.h>
 #include "matrices/format/headers/ellpack.h"
 
-#define NFILES 29
+#define NFILES 28
 #define NREPETITIONS 2
-#define FILEHEADER "nThreads, MatrixName, NRows, NCol, NZ, k, time, err_rel, bandwidth, GFLOPS, speedup\n"
+#define FILEHEADER "nThreads, MatrixName, NRows, NCol, NZ, k, time, err_rel, speedup, bandwidth, GFLOPS\n"
 #define MAX_N_THREADS 40
-#define STARTFILE 0
+#define STARTFILE 16
 
 int main(){
     coo_matrix mat;
@@ -20,11 +20,13 @@ int main(){
     h_ellpack_matrix converted_h_ellpack_matrix;
     h_ellpack_matrix_bis converted_h_ellpack_matrix_bis;
     matrix multivector, result_par, result_ser,multivector_T;
+    performance perf;
     long byte_csr_trasfer = 0;
     clock_t begin, end;
     double timeSumSer = 0.0, timeSumCsrOmp = 0.0, timeSumEllpackOmp = 0.0, timeSumEllpackCuda = 0.0, timeSumCsrCuda = 0.0;
     double errorCsrOmp = 0.0, errorEllpackOmp = 0.0, errorEllpackCuda = 0.0, errorCsrCuda = 0.0;
     double speedupCsrOmp = 0.0, speedupCsrCuda = 0.0, speedupEllpackOmp = 0.0, speedupEllpackCuda = 0.0;
+    double bandwidthCsrOmp = 0.0, bandwidthCsrCuda = 0.0, bandwidthEllpackOmp = 0.0, bandwidthEllpackCuda = 0.0;
     int col_multivector[7] = {3,4,8,12,16,32,64};
 
     FILE *resultsSer = fopen("../measurements/results/serial.csv", "w+");
@@ -43,7 +45,7 @@ int main(){
         "../measurements/matrix_files/west2021.mtx",
         "../measurements/matrix_files/mhda416.mtx",
         "../measurements/matrix_files/adder_dcop_32.mtx",
-        "../measurements/matrix_files/mcfe.mtx",
+        //"../measurements/matrix_files/mcfe.mtx",
         "../measurements/matrix_files/rdist2.mtx",
         "../measurements/matrix_files/cavity10.mtx",
         "../measurements/matrix_files/mhd4800a.mtx",
@@ -91,70 +93,81 @@ int main(){
         converted_h_ellpack_matrix_bis = convert_coo_to_h_ellpack_bis(mat);
         //fprint_h_ellpack_matrix(converted_h_ellpack_matrix);
         
-        for(int j = 0; j < 1; j++){
+        for(int j = 0; j < 7; j++){
             multivector = generate_multivector(mat.n, col_multivector[j]);
             multivector_T = genera_trasposta(multivector);
             prepara_risultato(converted_csr_matrix.m, multivector.n, &result_ser);
             prepara_risultato(converted_csr_matrix.m, multivector.n, &result_par);
-            //byte_csr_trasfer = 
             timeSumSer = 0.0;
             timeSumCsrCuda = 0.0;
             timeSumEllpackCuda = 0.0;
             errorCsrCuda = 0;
             errorEllpackCuda = 0;
-            
+            bandwidthCsrCuda = 0.0;
+            bandwidthEllpackCuda = 0.0;
+            speedupCsrCuda = 0.0;
+            speedupEllpackCuda = 0.0;
             for(int k = 0; k < NREPETITIONS; k++){
                 timeSumSer += calcola_prodotto_seriale(converted_csr_matrix,multivector, &result_ser);
-                
-                /*prepara_risultato(converted_csr_matrix.m, multivector.n,&result_par);
-                timeSumCsrCuda += calcola_prodotto_csr_cuda(converted_csr_matrix, multivector, &result_par);
-                errorCsrCuda += check_result(result_ser,result_par);
-                speedupCsrCuda = timeSumCsrCuda/timeSumSer;
-                free_matrix(&result_par);*/
                 /*
-
                 prepara_risultato(converted_csr_matrix.m, multivector.n,&result_par);
-                timeSumEllpackCuda += optimized_cuda_h_ellpack_product_in_bis(converted_h_ellpack_matrix_bis, multivector_T, &result_par);
-                errorEllpackCuda += check_result(result_ser,result_par);
-                speedupEllpackCuda = timeSumEllpackCuda/timeSumSer;
+                perf = calcola_prodotto_csr_cuda(converted_csr_matrix, multivector, &result_par);
+                timeSumCsrCuda += perf.time;
+                bandwidthCsrCuda += perf.bandwidth;
+                errorCsrCuda += check_result(result_ser,result_par);
+                speedupCsrCuda += timeSumCsrCuda/timeSumSer;
                 free_matrix(&result_par);
+                printf("csr\n");
                 */
+                prepara_risultato(converted_csr_matrix.m, multivector.n,&result_par);
+                perf = optimized_cuda_h_ellpack_product_in_bis(converted_h_ellpack_matrix_bis, multivector, &result_par);
+                timeSumEllpackCuda += perf.time;
+                bandwidthEllpackCuda += perf.bandwidth;
+                errorEllpackCuda += check_result(result_ser,result_par);
+                speedupEllpackCuda += timeSumEllpackCuda/timeSumSer;
+                printf("ellpack\n");
+                free_matrix(&result_par);
+                
             }
             //free_coo_matrix(&mat);
-
+            /*
             for(int t = 1; t < MAX_N_THREADS; t++){
                 timeSumCsrOmp = 0.0;
                 timeSumEllpackOmp = 0.0;  
                 errorCsrOmp = 0;  
                 errorEllpackOmp = 0;
-                /*for(int k = 0; k < NREPETITIONS; k++){
+                speedupCsrOmp = 0.0;
+                speedupEllpackOmp = 0.0;
+                for(int k = 0; k < NREPETITIONS; k++){
                     prepara_risultato(converted_csr_matrix.m, multivector.n,&result_par);
                     timeSumCsrOmp += calcola_prodotto_per_righe_csr_openmp(converted_csr_matrix,multivector, &result_par, t);
                     errorCsrOmp += check_result(result_ser,result_par);
-                    speedupCsrOmp = timeSumCsrOmp/timeSumSer;
+                    speedupCsrOmp += timeSumCsrOmp/timeSumSer;
                     free_matrix(&result_par);
 
                     prepara_risultato(converted_csr_matrix.m, multivector.n,&result_par);
                     timeSumEllpackOmp += optimized_omp_ellpack_product(converted_ellpack_matrix,multivector, &result_par, t);
                     errorEllpackOmp += check_result(result_ser,result_par);
-                    speedupEllpackOmp = timeSumEllpackOmp/timeSumSer;
+                    speedupEllpackOmp += timeSumEllpackOmp/timeSumSer;
                     free_matrix(&result_par);
-                }*/
-                fprintf(resultsCsrOmp,"%d, %s, %d, %d, %d, %d, %f, %f, %f\n",t,matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumCsrOmp/NREPETITIONS,errorCsrOmp/NREPETITIONS,(converted_csr_matrix.nz/pow(10,9))*(2*col_multivector[j]/(timeSumCsrOmp/NREPETITIONS)), speedupCsrOmp/NREPETITIONS);
-                fprintf(resultsEllpackOmp,"%d, %s, %d, %d, %d, %d, %f, %f, %f\n",t,matFiles[i],converted_ellpack_matrix.m, converted_ellpack_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumEllpackOmp/NREPETITIONS,errorEllpackOmp/NREPETITIONS,((2*col_multivector[j]/pow(10,9))*converted_csr_matrix.nz)/(timeSumEllpackOmp/NREPETITIONS), speedupEllpackOmp/NREPETITIONS);
+                }
+                
+                fprintf(resultsCsrOmp,"%d, %s, %d, %d, %d, %d, %f, %f, %f, %f\n",t,matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumCsrOmp/NREPETITIONS,errorCsrOmp/NREPETITIONS,speedupCsrOmp/NREPETITIONS,0,(converted_csr_matrix.nz/pow(10,9))*(2*col_multivector[j]/(timeSumCsrOmp/NREPETITIONS)));
+                fprintf(resultsEllpackOmp,"%d, %s, %d, %d, %d, %d, %f, %f, %f, %f\n",t,matFiles[i],converted_ellpack_matrix.m, converted_ellpack_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumEllpackOmp/NREPETITIONS,errorEllpackOmp/NREPETITIONS,speedupEllpackOmp/NREPETITIONS,0,((2*col_multivector[j]/pow(10,9))*converted_csr_matrix.nz)/(timeSumEllpackOmp/NREPETITIONS));
             }
-
-            fprintf(resultsSer,"%d, %s, %d, %d, %d, %d, %f, %f, %f, 1\n",1, matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumSer/NREPETITIONS,0,(converted_csr_matrix.nz/pow(10,9))*(2*col_multivector[j]/(timeSumSer/NREPETITIONS)));
-            fprintf(resultsCsrCuda,"%d, %s, %d, %d, %d, %d, %f, %f, %f, %f\n",0,matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumCsrCuda/NREPETITIONS,errorCsrCuda/NREPETITIONS,((2*col_multivector[j]/pow(10,9))*converted_csr_matrix.nz)/(timeSumCsrCuda/NREPETITIONS), speedupCsrCuda/NREPETITIONS);
-            fprintf(resultsEllpackCuda,"%d, %s, %d, %d, %d, %d, %f, %f, %f, %f\n",0,matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumEllpackCuda/NREPETITIONS,errorEllpackCuda/NREPETITIONS,((2*col_multivector[j]/pow(10,9))*converted_csr_matrix.nz)/(timeSumEllpackCuda/NREPETITIONS), speedupEllpackCuda/NREPETITIONS);
+            */
+            fprintf(resultsSer,"%d, %s, %d, %d, %d, %d, %f, %f, 1, %f, %f\n",1, matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumSer/NREPETITIONS,0,0,(converted_csr_matrix.nz/pow(10,9))*(2*col_multivector[j]/(timeSumSer/NREPETITIONS)));
+            fprintf(resultsCsrCuda,"%d, %s, %d, %d, %d, %d, %f, %f, %f, %f, %f\n",0,matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumCsrCuda/NREPETITIONS,errorCsrCuda/NREPETITIONS,speedupCsrCuda/NREPETITIONS,bandwidthCsrCuda/NREPETITIONS,((2*col_multivector[j]/pow(10,9))*converted_csr_matrix.nz)/(timeSumCsrCuda/NREPETITIONS));
+            fprintf(resultsEllpackCuda,"%d, %s, %d, %d, %d, %d, %f, %f, %f, %f, %f\n",0,matFiles[i],converted_csr_matrix.m, converted_csr_matrix.n, converted_csr_matrix.nz, col_multivector[j], timeSumEllpackCuda/NREPETITIONS,errorEllpackCuda/NREPETITIONS,speedupEllpackCuda/NREPETITIONS,bandwidthEllpackCuda/NREPETITIONS,((2*col_multivector[j]/pow(10,9))*converted_csr_matrix.nz)/(timeSumEllpackCuda/NREPETITIONS));
             free_matrix(&result_ser);
             
         }
         
         free_coo_matrix(&mat);
-        free_h_ellpack_matrix(&converted_h_ellpack_matrix);
+        free_h_ellpack_matrix(&converted_h_ellpack_matrix_bis);
         free_matrix(&multivector);
         free_matrix(&multivector_T);
+        
     }
 
     fclose(resultsSer);

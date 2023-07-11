@@ -5,6 +5,8 @@
 #include <omp.h>
 #include "headers/ellpack.h"
 
+#define HACKSIZE 32
+
 #define max(a,b)             \
 ({                           \
     __typeof__ (a) _a = (a); \
@@ -252,7 +254,7 @@ h_ellpack_matrix_bis convert_coo_to_h_ellpack_bis(coo_matrix mat){
     h_ellpack_matrix_bis converted_matrix;
     converted_matrix.m = mat.m;
     converted_matrix.n = mat.n;
-    converted_matrix.hackSize = 32;
+    converted_matrix.hackSize = HACKSIZE;
     converted_matrix.numMatrix = converted_matrix.m/converted_matrix.hackSize + 1;
     if (converted_matrix.m%converted_matrix.hackSize == 0) converted_matrix.numMatrix--;
     converted_matrix.hackOffsets = (int*)calloc(converted_matrix.numMatrix+1,sizeof(int));

@@ -2,6 +2,7 @@
 #define _ELLPACKPRODUCTH_
 
 #include "../../matrices/format/headers/ellpack.h"
+#include "product.h"
 
 //product_ellpack_omp.c
 void ellpack_product(ellpack_matrix* mat, matrix* vector, matrix* result);
@@ -28,7 +29,7 @@ void print_gpu_matrix_d(double* matrix, int m, int n);
 void print_gpu_matrix_i(int* matrix, int m, int n);
 double optimized_cuda_ellpack_product_in(ellpack_matrix host_mat, matrix vector, matrix* result);
 double optimized_cuda_h_ellpack_product_in(h_ellpack_matrix host_mat, matrix vector, matrix* result);
-double optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_mat, matrix multivector, matrix* result);
+performance optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_mat, matrix multivector, matrix* result);
 
 
 #endif

@@ -2,6 +2,10 @@
 #define _PRODUCTH_
 #include "../../matrices/format/headers/csr.h"
 
+typedef struct{
+    double time;
+    double bandwidth;
+} performance;
 
 void prepara_risultato(int m, int n, matrix* result);
 void prepara_risultato_cuda(int m, int n, matrix* result);

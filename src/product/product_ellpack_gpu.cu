@@ -5,7 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "../src/matrices/format/headers/ellpack.h"
+//#include "../src/matrices/format/headers/ellpack.h"
+#include "headers/product_ellpack.h"
 #include "../src/matrices/headers/matrix_generator.h"
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
@@ -129,57 +130,40 @@ __global__ void optimized_cuda_ellpack_product(int m, int n, int maxnz, double* 
 
 
 __global__ void optimized_cuda_h_ellpack_product(int m, int n, int* maxnz, double* AS, int* JA, int* hackOffsets, int hackSize, int numMatrix, int matDim, double* coeff, double* myRes){
-    long idx = blockDim.x * blockIdx.x + threadIdx.x;
     int bid = blockIdx.x;
     int tid = threadIdx.x;
-    if (idx <= m*n){
-        //long AS_JA_row = idx/n;                     //Indice di riga della matrice risultante (con cui mi scorro AS e JA)
-        //int multiv_col = idx%n;                     //Indice di colonna della matrice risultante (con cui mi scorro il multivettore)
-        
-        //long warpId = idx/32;                       //Warp a cui "partecipa" il thread
-        //int intraWarpId = idx%32;
+    
+    __shared__ double vals[4096];
+    __shared__ int cols[4096];
 
-        //long AS_JA_warp = warpId/n;
-        //int multiv_col_warp = warpId%n;             //Indice di colonna gestito dal warp0
-        int i; 
-
-        __shared__ double vals[4096];
-        __shared__ int cols[4096];
-
-        int first = 0;
-        int last = 0;
-
-        double res=0;
-        
-
-        for (int submatIdx = bid; submatIdx<numMatrix; submatIdx += gridDim.x){
-            int counter = 0;
-            for (first = hackOffsets[submatIdx]; first < hackOffsets[submatIdx + 1]; first += 4096){
-                last = min(first + 4096 , hackOffsets[submatIdx + 1]);
-                
-                for (int idxS = first + tid; idxS < last; idxS += blockDim.x){
-                    vals[idxS % 4096] = AS[idxS];
-                    cols[idxS % 4096] = JA[idxS];
-                }
-                __syncthreads();   
-
-                if (tid<(last-first)/maxnz[submatIdx]*n){
-                    for (long j=0; j<maxnz[submatIdx]; j++){
-                        res += vals[(tid/n)*maxnz[submatIdx] + j] * coeff[(tid%n)*m + cols[tid/n*maxnz[submatIdx] + j]];
-                        if (tid/n == 4 && tid%n == 0) printf("idx = %d; res += vals[%d] * coeff[%d + cols[%d]]\n",(int)idx,(int)((tid/n)*maxnz[submatIdx] + j),(int)((tid%n)*m),(int)(tid/n*maxnz[submatIdx] + j));
-                    }
-                    myRes[(hackSize*submatIdx + counter + tid/n)*n + (tid%n)] = res;
-                    //if (tid/n == 4 && tid%n == 0) printf("idx = %d; n = %d, myRes[(%d)*n + %d] = %f;\n",(int)idx,n,(int)(hackSize*submatIdx)+counter+(int)(tid/n),(int)(tid%n),res);
-                }
-                
-                res=0;
-                counter += (last-first)/maxnz[submatIdx];
-                __syncthreads();
-                
+    int first = 0;
+    int last = 0;
+    if(bid == 0 && tid == 0) printf("%d\n",numMatrix);
+    double res=0;
+    for (int submatIdx = bid; submatIdx<numMatrix; submatIdx += gridDim.x){
+        int counter = 0;
+        for (first = hackOffsets[submatIdx]; first < hackOffsets[submatIdx + 1]; first += (int)((4096.0/maxnz[submatIdx]))*maxnz[submatIdx]){
+            last = min(first + (int)((4096.0/maxnz[submatIdx]))*maxnz[submatIdx] , hackOffsets[submatIdx + 1]);
+            for (int idxS = first + tid; idxS < last; idxS += blockDim.x){
+                vals[idxS-first] = AS[idxS];
+                cols[idxS-first] = JA[idxS];
             }
             __syncthreads();
-        }
+
+            for(int t = tid; t<(last-first)/maxnz[submatIdx]*n; t +=blockDim.x){
+                for (int j=0; j<maxnz[submatIdx]; j++){
+                    res += vals[(t/n)*maxnz[submatIdx] + j] * coeff[cols[(t/n)*maxnz[submatIdx] + j]*n + (t%n)];
+                }
+                myRes[(hackSize*submatIdx + counter + t/n)*n + (t%n)] = res;
+                res=0;
+            }
+            
+            counter += (last-first)/maxnz[submatIdx];
+            __syncthreads();
+            
+        }    
     }
+    
 }
 
 __device__ double warp_reduce_2(double val){
@@ -188,7 +172,7 @@ __device__ double warp_reduce_2(double val){
     }
     return val;
 }
-
+/*
 __global__ void optimized_cuda_h_ellpack_product_2(int nRows, int nCols, int* maxnz, double* AS, int* JA, int* hackOffsets, int hackSize, int numMatrix, double* multivector, double* myRes){
     int idxBlock = blockIdx.x; // Indice del blocco che determina la sottomatrice da fare
     int warpId = threadIdx.y; //Indice del warp
@@ -283,8 +267,8 @@ __global__ void optimized_cuda_h_ellpack_product_2(int nRows, int nCols, int* ma
     }
 
 }
-
-double optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_mat, matrix multivector, matrix* result){
+*/
+performance optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_mat, matrix multivector, matrix* result){
 
     // resetto il device
     checkCudaErrors(cudaDeviceReset());
@@ -299,7 +283,7 @@ double optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_mat, ma
     checkCudaErrors(cudaMalloc((void**)&d_hackOffset, (host_mat.numMatrix+1) * sizeof(int)));
 
     checkCudaErrors(cudaMalloc((void**)&d_multivector, multivector.n * multivector.m * sizeof(double)));
-    checkCudaErrors(cudaMalloc((void**)&d_result, host_mat.m * multivector.m * sizeof(double)));
+    checkCudaErrors(cudaMalloc((void**)&d_result, host_mat.m * multivector.n * sizeof(double)));
 
     // Copia dati sulla GPU
     checkCudaErrors(cudaMemcpy(d_as, host_mat.AS, host_mat.matDim * sizeof(double), cudaMemcpyHostToDevice));
@@ -308,23 +292,21 @@ double optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_mat, ma
     checkCudaErrors(cudaMemcpy(d_hackOffset, host_mat.hackOffsets, (host_mat.numMatrix+1) * sizeof(int), cudaMemcpyHostToDevice));
     
     checkCudaErrors(cudaMemcpy(d_multivector, multivector.coeff, multivector.n * multivector.m * sizeof(double), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemset(d_result, 0, host_mat.m * multivector.m * sizeof(double)));
+    checkCudaErrors(cudaMemset(d_result, 0, host_mat.m * multivector.n * sizeof(double)));
 
     int gridX = host_mat.numMatrix;
     if(gridX > MAX_GRID_SIZE) gridX = MAX_GRID_SIZE;
 
     dim3 gridSize(gridX);               //NUMERO DI BLOCCHI IN UNA GRID
-    dim3 blockSize(32*32);              //NUMERO DI THREAD IN UN BLOCCO
+    dim3 blockSize(1024);              //NUMERO DI THREAD IN UN BLOCCO
 
     float time;
     cudaEvent_t start, stop;
     checkCudaErrors(cudaEventCreate(&start));
     checkCudaErrors(cudaEventCreate(&stop));
     checkCudaErrors(cudaEventRecord(start, 0));// 0 - the default stream
-    optimized_cuda_h_ellpack_product<<<gridSize,blockSize>>>(host_mat.m, multivector.m, d_maxnz, d_as, d_ja, d_hackOffset, host_mat.hackSize, host_mat.numMatrix, host_mat.matDim, d_multivector, d_result);
+    optimized_cuda_h_ellpack_product<<<gridSize,blockSize>>>(host_mat.m, multivector.n, d_maxnz, d_as, d_ja, d_hackOffset, host_mat.hackSize, host_mat.numMatrix, host_mat.matDim, d_multivector, d_result);
         //optimized_cuda_h_ellpack_product<<<gridSize,blockSize>>>(result->m, result->n, maxnz, AS, JA, hackOffsets, host_mat.hackSize, host_mat.numMatrix, host_mat.matDim, coeff, cuda_result);
-    checkCudaErrors(cudaDeviceSynchronize());
-
     checkCudaErrors(cudaEventRecord(stop, 0));// 0 - the default stream
     checkCudaErrors(cudaEventSynchronize(stop));
     checkCudaErrors(cudaEventElapsedTime(&time, start, stop));
@@ -338,12 +320,19 @@ double optimized_cuda_h_ellpack_product_in_bis(h_ellpack_matrix_bis host_mat, ma
 
     double * resultData =(double*) malloc(host_mat.m * multivector.n * sizeof(double));
     
-    checkCudaErrors(cudaMemcpy(resultData, d_result, host_mat.m * multivector.m * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(resultData, d_result, host_mat.m * multivector.n * sizeof(double), cudaMemcpyDeviceToHost));
     
     result->coeff = resultData;
     
     checkCudaErrors(cudaFree(d_result));
-    return (double)time/1000;
+
+    double Br = 8*(host_mat.matDim + multivector.m*multivector.n) + 4*(host_mat.matDim+2*host_mat.numMatrix+1);
+    double Bw = (result->m * result->n) * 8;
+    double effective_bandwidth = ((Br+Bw)/(pow (10 ,9)))/(time/1000);
+    performance perf;
+    perf.time = (double)time/1000;
+    perf.bandwidth = effective_bandwidth;
+    return perf;
 }
 
 double optimized_cuda_ellpack_product_in(ellpack_matrix host_mat, matrix vector, matrix* result){
