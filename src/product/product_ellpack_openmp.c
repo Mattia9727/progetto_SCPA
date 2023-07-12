@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include "headers/product_ellpack.h"
 #include <time.h>
+#include <math.h>
 
 void ellpack_product(ellpack_matrix* mat, matrix* vector, matrix* result){
     for (int i = 0; i < result->m; i++) {
@@ -38,7 +39,7 @@ double omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, in
     return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
 }
 
-double optimized_omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, int nThreads){
+performance optimized_omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, int nThreads){
     double t = 0;
     int i,j,k;
     unsigned long maxnz= mat.maxnz, m = result->m, n= result->n;
@@ -66,5 +67,13 @@ double optimized_omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* 
         }
     }
     clock_gettime(CLOCK_MONOTONIC, &end);
-    return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
+
+    performance perf;
+    perf.time = (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
+    double Br = 8*(mat.m * mat.maxnz / perf.time  + (vector.m*vector.n)/perf.time) + 4*(1/perf.time + (mat.m * mat.maxnz/perf.time));
+    double Bw = ((result->m * result->n)/perf.time) * 8;
+    double effective_bandwidth = ((Br+Bw)/(pow (10 ,9)));
+    perf.bandwidth = effective_bandwidth;
+
+    return perf;
 }

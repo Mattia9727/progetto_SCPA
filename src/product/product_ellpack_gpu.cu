@@ -219,16 +219,16 @@ double optimized_cuda_ellpack_product_in(ellpack_matrix host_mat, matrix vector,
     long* d_ja;
 
     // Alloco memoria in GPU
-    checkCudaErrors(cudaMalloc((void**)&d_as, host_mat.m * host.mat.n * sizeof(double)));
-    checkCudaErrors(cudaMalloc((void**)&d_ja, host_mat.m * host.mat.n * sizeof(int)));
+    checkCudaErrors(cudaMalloc((void**)&d_as, host_mat.m * host_mat.n * sizeof(double)));
+    checkCudaErrors(cudaMalloc((void**)&d_ja, host_mat.m * host_mat.n * sizeof(int)));
     checkCudaErrors(cudaMalloc((void**)&d_multivector, vector.m * vector.n * sizeof(double)));
-    checkCudaErrors(cudaMalloc((void**)&d_result, host_mat.m * multivector.n * sizeof(double)));
+    checkCudaErrors(cudaMalloc((void**)&d_result, host_mat.m * vector.n * sizeof(double)));
 
     // Copia dati sulla GPU
-    checkCudaErrors(cudaMemcpy(d_as, host_mat.AS, host_mat.m * host.mat.n * sizeof(double), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpy(d_ja, host_mat.JA, host_mat.m * host.mat.n * sizeof(int), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpy(d_multivector, multivector.coeff, vector.m * vector.n * sizeof(double), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemset(d_result, 0, host_mat.m * multivector.n * sizeof(double)));
+    checkCudaErrors(cudaMemcpy(d_as, host_mat.AS, host_mat.m * host_mat.n * sizeof(double), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_ja, host_mat.JA, host_mat.m * host_mat.n * sizeof(int), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_multivector, vector.coeff, vector.m * vector.n * sizeof(double), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemset(d_result, 0, host_mat.m * vector.n * sizeof(double)));
     
     // Assegno numero di blocchi in modo che ogni blocco gestisca un numero di righe pari a blockX
     int blockX = int(((1024/vector.m)/32)*32), blockY = vector.m;
@@ -244,7 +244,7 @@ double optimized_cuda_ellpack_product_in(ellpack_matrix host_mat, matrix vector,
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start, 0);
-    optimized_cuda_ellpack_product<<<gridSize,blockSize>>>(result->m, result->n, host_mat.maxnz, AS, JA, coeff, cuda_result);
+    optimized_cuda_ellpack_product<<<gridSize,blockSize>>>(result->m, result->n, host_mat.maxnz, d_as, d_ja, d_multivector, d_result);
     cudaDeviceSynchronize();
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
@@ -258,10 +258,10 @@ double optimized_cuda_ellpack_product_in(ellpack_matrix host_mat, matrix vector,
     result->coeff = resultData;
     
     // Libero memoria in GPU
-    checkCudaErrors(cudaFree((void*)JA));
-    checkCudaErrors(cudaFree((void*)AS));
-    checkCudaErrors(cudaFree((void*)coeff));
-    checkCudaErrors(cudaFree((void*)cuda_result));
+    checkCudaErrors(cudaFree((void*)d_as));
+    checkCudaErrors(cudaFree((void*)d_ja));
+    checkCudaErrors(cudaFree((void*)d_multivector));
+    checkCudaErrors(cudaFree((void*)d_result));
 
     return (double)time;
 }

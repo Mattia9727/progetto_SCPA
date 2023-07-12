@@ -7,7 +7,7 @@
 //product_ellpack_omp.c
 void ellpack_product(ellpack_matrix* mat, matrix* vector, matrix* result);
 double omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, int nThreads);
-double optimized_omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, int nThreads);
+performance optimized_omp_ellpack_product(ellpack_matrix mat, matrix vector, matrix* result, int nThreads);
 
 //product_ellpack_gpu.c
 double* move_AS_on_gpu(ellpack_matrix* mat);

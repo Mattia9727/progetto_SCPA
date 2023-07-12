@@ -2,7 +2,8 @@
 #include <omp.h>
 #include "headers/product_csr.h"
 #include <time.h>
-double calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multivector,matrix* result, int nThreads){
+#include <math.h>
+performance calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multivector,matrix* result, int nThreads){
     
     if(csrMatrix.n != multivector.m){
         printf("Prodotto non calcolabile tra la matrice e il multivettore inserito\n");
@@ -35,7 +36,11 @@ double calcola_prodotto_per_righe_csr_openmp(csr_matrix csrMatrix, matrix multiv
         }
     }    
     clock_gettime(CLOCK_MONOTONIC, &end);
-    return (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
+    performance perf;
+    perf.time = (double)( end.tv_sec - start.tv_sec )+ ( end.tv_nsec - start.tv_nsec )/ (double)1000000000L;
+    perf.bandwidth = (double)(8*((csrMatrix.m * multivector.n)/perf.time + (csrMatrix.nz)/perf.time +(multivector.m * multivector.n)/perf.time ))+4*(4/perf.time+csrMatrix.nz/perf.time  +csrMatrix.m/perf.time);
+    perf.bandwidth = perf.bandwidth/pow(10,9);
+    return perf;
 } 
 
 double calcola_prodotto_per_righe_csr_openmp_bis(csr_matrix csrMatrix, matrix multivector,matrix* result, int nThreads){
