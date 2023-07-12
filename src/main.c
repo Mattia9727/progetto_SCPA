@@ -33,7 +33,6 @@ int main(){
     FILE *resultsEllpackOmp = fopen("../measurements/results/ellpackomp.csv", "w+");
     FILE *resultsCsrCuda = fopen("../measurements/results/csrcuda.csv", "w+");
     FILE *resultsEllpackCuda = fopen("../measurements/results/ellpackcuda.csv", "w+");
-    FILE *debug = fopen("../measurements/results/debug.csv", "w+");
 
     if(resultsSer == NULL || resultsCsrOmp == NULL || resultsEllpackOmp == NULL ||resultsCsrCuda == NULL || resultsEllpackCuda == NULL)
         printf("errore apertura file\n");
