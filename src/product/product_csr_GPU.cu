@@ -195,8 +195,8 @@ __global__ void csrAdaptiveMultOttimizzato(double* as, int* ja, int* irp, double
             for(int col_m = warpId; col_m < col_multivector; col_m +=32){
                 for(int i = irp[startRow] + lane; i < irp[startRow+1]; i +=32){
                     if(nnz < 4096){
-                        val = as[i];
-                        col = ja[i];
+                        val = vals[i-irp[startRow]];
+                        col = cols[i-irp[startRow]];
                     }else{
                         val = as[i];
                         col = ja[i];
