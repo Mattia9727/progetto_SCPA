@@ -1,7 +1,0 @@
-Cose da fare:
-
-###1) Struct per gestione formati CSR/ELLPACK (più funzioni di conversione mat/CSR, CSR/mat, mat/ELLPACK, ELLPACK/mat)
-###2) Programma "stupido" per calcolo matrice-vettore (no CUDA/OpenMP)
-3) Programma CUDA/OpenMP -> Row ELLPACK/CSR, 2D ELLPACK/CSR
-4) Prendere dati da repository prof
-5) Test prestazioni (con/senza operazioni di IO/scambio dati)
